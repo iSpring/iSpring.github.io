@@ -1,7 +1,4 @@
-﻿var containerNode = document.getElementById("custom_column_21591691");
-if (!containerNode) {
-  return;
-}
+var containerNode = document.getElementById("custom_column_21591691");
 
 var repoNames = ["GamePlane"];
 
