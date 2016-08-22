@@ -19,7 +19,7 @@
     var str = '<a style="display:inline-block;color:#3d84b0;padding:15px;text-decoration:none;" target="_blank">' +
       '<div>' +
         '<span class="repo-name" style="display:inline-block;height:24px;line-height:24px;vertical-align:middle;"></span>' +
-        '<span class="star-icon" style="display:inline-block;height:24px;line-height24px;vertical-align:middle;width:24px;margin-left:10px;background:url(http://www.easyicon.net/api/resizeApi.php?id=1171410&size=16) no-repeat center"></span>' +
+        '<span class="star-icon" style="display:inline-block;height:24px;line-height24px;vertical-align:middle;width:11px;margin-left:10px;background:url(http://www.easyicon.net/api/resizeApi.php?id=1171410&size=16) no-repeat center;background-size:contain;"></span>' +
         '<span class="star-count" style="height:24px;line-height24px;vertical-align:middle;width:24px;margin-left:5px;"></span>' +
       '</div>' +
       '<div class="repo-description"></div>' +
