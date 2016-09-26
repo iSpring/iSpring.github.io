@@ -1,0 +1,3 @@
+[submodule "WebGlobe"]
+	path = WebGlobe
+	url = git@github.com:iSpring/WebGlobe.git
