@@ -4,7 +4,7 @@
     return;
   }
 
-  var repoNames = ["GamePlane"];
+  var repoNames = ["WebGlobe", "GamePlane"];
 
   function getRepoInfo(data, repoName) {
     for (var i = 0; i < data.length; i++) {
