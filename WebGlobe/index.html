@@ -6,7 +6,27 @@
 		<meta http-equiv="Content-Type" content="text/html" />
 		<meta name="charset" content="utf-8" />
 		<script type="text/javascript">
-				window.location.href = "index-bundle.html";
+				var supportedVersions = ["0.2.1"];
+				var search = window.location.search;
+				var paramsObj = {};
+				if(search){
+					var kvs = search.replace("?", "").split("&");
+					var splits = null;
+					for(var i = 0; i < kvs.length; i++){
+						splits = kvs[i].split("=");
+						if(splits.length === 2){
+							paramsObj[splits[0]] = splits[1];
+						}
+					}
+				}
+				var version = "";
+				if(paramsObj.hasOwnProperty("v")){
+					version = paramsObj.v;
+				}
+				if(supportedVersions.indexOf(version) < 0){
+					version = supportedVersions[supportedVersions.length - 1];
+				}
+				window.location.href = version + "/index.html";
 		</script>
 	</head>
 
