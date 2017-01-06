@@ -44,15 +44,15 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(1), __webpack_require__(31), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Globe, GoogleTiledLayer, OsmTiledLayer_1, BingTiledLayer, SosoTiledLayer) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(1), __webpack_require__(38), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Globe, GoogleTiledLayer, OsmTiledLayer_1, BingTiledLayer, SosoTiledLayer) {
 	    "use strict";
 	    (function () {
 	        var canvas = document.getElementById("canvasId");
 	        var globe = new Globe(canvas);
 	        window.globe = globe;
 	        var stylesObj = {
+	            google: ["Satellite", "Default"],
 	            osm: ["Default", "Cycle", "Transport", "Humanitarian"],
-	            google: ["Default", "Satellite"],
 	            bing: ["Default"],
 	            soso: ["Default"]
 	        };
@@ -111,7 +111,7 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(5), __webpack_require__(6), __webpack_require__(2), __webpack_require__(16), __webpack_require__(17), __webpack_require__(18), __webpack_require__(29)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Renderer, Camera_1, Scene, ImageUtils, EventHandler, Atmosphere, PoiLayer) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(5), __webpack_require__(15), __webpack_require__(2), __webpack_require__(17), __webpack_require__(18), __webpack_require__(34), __webpack_require__(36)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Renderer, Camera_1, Scene, ImageUtils, EventHandler, AutonaviLabelLayer_1, Atmosphere, PoiLayer) {
 	    "use strict";
 	    var Globe = (function () {
 	        function Globe(canvas) {
@@ -120,6 +120,7 @@
 	            this.scene = null;
 	            this.camera = null;
 	            this.tiledLayer = null;
+	            this.labelLayer = null;
 	            this.poiLayer = null;
 	            this.cameraCore = null;
 	            this.eventHandler = null;
@@ -131,6 +132,8 @@
 	            this.renderer.setScene(this.scene);
 	            this.renderer.setCamera(this.camera);
 	            this.setLevel(0);
+	            this.labelLayer = new AutonaviLabelLayer_1.default();
+	            this.scene.add(this.labelLayer);
 	            var atmosphere = Atmosphere.getInstance();
 	            this.scene.add(atmosphere);
 	            this.poiLayer = PoiLayer.getInstance();
@@ -196,6 +199,10 @@
 	                this.tiledLayer.refresh();
 	            }
 	            this.tiledLayer.updateTileVisibility();
+	            if (this.labelLayer.visible) {
+	                var lastLevelTileGrids = this.tiledLayer.getLastLevelVisibleTileGrids();
+	                this.labelLayer.updateTiles(this.getLastLevel(), lastLevelTileGrids);
+	            }
 	        };
 	        Globe.prototype.getExtents = function (level) {
 	            return this.tiledLayer.getExtents(level);
@@ -210,105 +217,39 @@
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, GraphicGroup) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
 	    "use strict";
-	    var Scene = (function (_super) {
-	        __extends(Scene, _super);
-	        function Scene() {
-	            _super.apply(this, arguments);
+	    var ImageUtils = {
+	        MAX_LEVEL: 4,
+	        images: {},
+	        add: function (url, img) {
+	            this.images[url] = img;
+	        },
+	        get: function (url) {
+	            return this.images[url];
+	        },
+	        remove: function (url) {
+	            delete this.images[url];
+	        },
+	        clear: function () {
+	            this.images = {};
+	        },
+	        getCount: function () {
+	            var count = 0;
+	            for (var url in this.images) {
+	                if (this.images.hasOwnProperty(url)) {
+	                    count++;
+	                }
+	            }
+	            return count;
 	        }
-	        return Scene;
-	    }(GraphicGroup));
-	    return Scene;
+	    };
+	    return ImageUtils;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ },
 /* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
-	    "use strict";
-	    var GraphicGroup = (function () {
-	        function GraphicGroup() {
-	            this.visible = true;
-	            this.id = ++Kernel.idCounter;
-	            this.children = [];
-	        }
-	        GraphicGroup.prototype.add = function (g, first) {
-	            if (first === void 0) { first = false; }
-	            if (first) {
-	                this.children.unshift(g);
-	            }
-	            else {
-	                this.children.push(g);
-	            }
-	            g.parent = this;
-	        };
-	        GraphicGroup.prototype.remove = function (g) {
-	            var result = false;
-	            var findResult = this.findGraphicById(g.id);
-	            if (findResult) {
-	                g.destroy();
-	                this.children.splice(findResult.index, 1);
-	                g = null;
-	                result = true;
-	            }
-	            return result;
-	        };
-	        GraphicGroup.prototype.clear = function () {
-	            var i = 0, length = this.children.length, g = null;
-	            for (; i < length; i++) {
-	                g = this.children[i];
-	                g.destroy();
-	            }
-	            this.children = [];
-	        };
-	        GraphicGroup.prototype.destroy = function () {
-	            this.parent = null;
-	            this.clear();
-	        };
-	        GraphicGroup.prototype.findGraphicById = function (graphicId) {
-	            var i = 0, length = this.children.length, g = null;
-	            for (; i < length; i++) {
-	                g = this.children[i];
-	                if (g.id === graphicId) {
-	                    return {
-	                        index: i,
-	                        graphic: g
-	                    };
-	                }
-	            }
-	            return null;
-	        };
-	        GraphicGroup.prototype.shouldDraw = function () {
-	            return this.visible && this.children.length > 0;
-	        };
-	        GraphicGroup.prototype.draw = function (camera) {
-	            if (this.shouldDraw()) {
-	                this.onDraw(camera);
-	            }
-	        };
-	        GraphicGroup.prototype.onDraw = function (camera) {
-	            this.children.forEach(function (g) {
-	                if (g.shouldDraw(camera)) {
-	                    g.draw(camera);
-	                }
-	            });
-	        };
-	        return GraphicGroup;
-	    }());
-	    return GraphicGroup;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -333,10 +274,10 @@
 
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
 	    var Renderer = (function () {
 	        function Renderer(canvas, onBeforeRender, onAfterRender) {
@@ -370,7 +311,7 @@
 	                return;
 	            }
 	            Kernel.gl.clear(Kernel.gl.COLOR_BUFFER_BIT | Kernel.gl.DEPTH_BUFFER_BIT);
-	            gl.clearColor(255, 255, 255, 1.0);
+	            gl.clearColor(0, 0, 0, 1);
 	            gl.enable(gl.DEPTH_TEST);
 	            gl.depthFunc(gl.LEQUAL);
 	            gl.depthMask(true);
@@ -420,7 +361,7 @@
 
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -428,7 +369,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(9), __webpack_require__(10), __webpack_require__(8), __webpack_require__(7), __webpack_require__(11), __webpack_require__(13), __webpack_require__(14), __webpack_require__(15)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vertice, Vector, Line, TileGrid_1, Matrix, Object3D) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(8), __webpack_require__(9), __webpack_require__(7), __webpack_require__(6), __webpack_require__(10), __webpack_require__(12), __webpack_require__(13), __webpack_require__(14)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vertice, Vector, Line, TileGrid_1, Matrix, Object3D) {
 	    "use strict";
 	    var CameraCore = (function () {
 	        function CameraCore(fov, aspect, near, far, realLevel, matrix) {
@@ -1309,10 +1250,10 @@
 
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(8)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Vertice) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Vertice) {
 	    "use strict";
 	    var Vector = (function () {
 	        function Vector(x, y, z) {
@@ -1428,7 +1369,7 @@
 
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -1458,7 +1399,7 @@
 
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -1583,10 +1524,10 @@
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(9), __webpack_require__(8), __webpack_require__(7), __webpack_require__(11), __webpack_require__(12)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, Vertice, Vector, Line, Plan) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(8), __webpack_require__(7), __webpack_require__(6), __webpack_require__(10), __webpack_require__(11)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, Vertice, Vector, Line, Plan) {
 	    "use strict";
 	    if (!Math.log2) {
 	        Math.log2 = function (value) { return (Math.log(value) / Math.log(2)); };
@@ -2106,7 +2047,7 @@
 
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -2137,7 +2078,7 @@
 
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -2160,10 +2101,10 @@
 
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(10)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MathUtils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(9)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MathUtils) {
 	    "use strict";
 	    (function (TileGridPosition) {
 	        TileGridPosition[TileGridPosition["LEFT_TOP"] = 0] = "LEFT_TOP";
@@ -2354,10 +2295,10 @@
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(9), __webpack_require__(8), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Vertice, Vector) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(8), __webpack_require__(7), __webpack_require__(6)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Vertice, Vector) {
 	    "use strict";
 	    var Matrix = (function () {
 	        function Matrix(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) {
@@ -2754,10 +2695,10 @@
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(14)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Matrix) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(13)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Matrix) {
 	    "use strict";
 	    var Object3D = (function () {
 	        function Object3D() {
@@ -2851,37 +2792,103 @@
 
 
 /***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(16)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, GraphicGroup) {
+	    "use strict";
+	    var Scene = (function (_super) {
+	        __extends(Scene, _super);
+	        function Scene() {
+	            _super.apply(this, arguments);
+	        }
+	        return Scene;
+	    }(GraphicGroup));
+	    return Scene;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
-	    var ImageUtils = {
-	        MAX_LEVEL: 4,
-	        images: {},
-	        add: function (url, img) {
-	            this.images[url] = img;
-	        },
-	        get: function (url) {
-	            return this.images[url];
-	        },
-	        remove: function (url) {
-	            delete this.images[url];
-	        },
-	        clear: function () {
-	            this.images = {};
-	        },
-	        getCount: function () {
-	            var count = 0;
-	            for (var url in this.images) {
-	                if (this.images.hasOwnProperty(url)) {
-	                    count++;
+	    var GraphicGroup = (function () {
+	        function GraphicGroup() {
+	            this.visible = true;
+	            this.id = ++Kernel.idCounter;
+	            this.children = [];
+	        }
+	        GraphicGroup.prototype.add = function (g, first) {
+	            if (first === void 0) { first = false; }
+	            if (first) {
+	                this.children.unshift(g);
+	            }
+	            else {
+	                this.children.push(g);
+	            }
+	            g.parent = this;
+	        };
+	        GraphicGroup.prototype.remove = function (g) {
+	            var result = false;
+	            var findResult = this.findGraphicById(g.id);
+	            if (findResult) {
+	                g.destroy();
+	                this.children.splice(findResult.index, 1);
+	                g = null;
+	                result = true;
+	            }
+	            return result;
+	        };
+	        GraphicGroup.prototype.clear = function () {
+	            var i = 0, length = this.children.length, g = null;
+	            for (; i < length; i++) {
+	                g = this.children[i];
+	                g.destroy();
+	            }
+	            this.children = [];
+	        };
+	        GraphicGroup.prototype.destroy = function () {
+	            this.parent = null;
+	            this.clear();
+	        };
+	        GraphicGroup.prototype.findGraphicById = function (graphicId) {
+	            var i = 0, length = this.children.length, g = null;
+	            for (; i < length; i++) {
+	                g = this.children[i];
+	                if (g.id === graphicId) {
+	                    return {
+	                        index: i,
+	                        graphic: g
+	                    };
 	                }
 	            }
-	            return count;
-	        }
-	    };
-	    return ImageUtils;
+	            return null;
+	        };
+	        GraphicGroup.prototype.shouldDraw = function () {
+	            return this.visible && this.children.length > 0;
+	        };
+	        GraphicGroup.prototype.draw = function (camera) {
+	            if (this.shouldDraw()) {
+	                this.onDraw(camera);
+	            }
+	        };
+	        GraphicGroup.prototype.onDraw = function (camera) {
+	            this.children.forEach(function (g) {
+	                if (g.shouldDraw(camera)) {
+	                    g.draw(camera);
+	                }
+	            });
+	        };
+	        return GraphicGroup;
+	    }());
+	    return GraphicGroup;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -2889,7 +2896,7 @@
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(9), __webpack_require__(10), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vector) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(8), __webpack_require__(9), __webpack_require__(6)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vector) {
 	    "use strict";
 	    var EventHandler = (function () {
 	        function EventHandler(canvas) {
@@ -3126,51 +3133,29 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(19), __webpack_require__(22), __webpack_require__(27), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshGraphic, AtmosphereGeometry, MeshTextureMaterial, Vector) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(19)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, LabelLayer_1) {
 	    "use strict";
-	    var Atmosphere = (function (_super) {
-	        __extends(Atmosphere, _super);
-	        function Atmosphere(geometry, material) {
-	            _super.call(this, geometry, material);
-	            this.geometry = geometry;
-	            this.material = material;
+	    var AutonaviLabelLayer = (function (_super) {
+	        __extends(AutonaviLabelLayer, _super);
+	        function AutonaviLabelLayer() {
+	            _super.apply(this, arguments);
+	            this.idx = 1;
 	        }
-	        Atmosphere.getInstance = function () {
-	            var geometry = new AtmosphereGeometry();
-	            var imageUrl = "/WebGlobe/src/world/images/atmosphere.png";
-	            var material = new MeshTextureMaterial(imageUrl, false);
-	            return new Atmosphere(geometry, material);
+	        AutonaviLabelLayer.prototype.getTileUrl = function (level, row, column) {
+	            if (this.idx === undefined) {
+	                this.idx = 1;
+	            }
+	            var url = "//wprd0" + this.idx + ".is.autonavi.com/appmaptile?x=" + column + "&y=" + row + "&z=" + level + "&lang=zh_cn&size=1&scl=1&style=8&type=11";
+	            this.idx++;
+	            if (this.idx >= 5) {
+	                this.idx = 1;
+	            }
+	            return url;
 	        };
-	        Atmosphere.prototype.shouldDraw = function (camera) {
-	            return camera.getLevel() < Kernel.EARTH_FULL_OVERLAP_SCREEN_LEVEL && _super.prototype.shouldDraw.call(this, camera);
-	        };
-	        Atmosphere.prototype.onDraw = function (camera) {
-	            var gl = Kernel.gl;
-	            gl.disable(gl.DEPTH_TEST);
-	            gl.depthMask(false);
-	            gl.enable(gl.BLEND);
-	            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-	            this.geometry.getMatrix().setUnitMatrix();
-	            var R = Kernel.EARTH_RADIUS;
-	            var distanceCamera2Origin = camera.getDistance2EarthOrigin();
-	            var distanceCamera2EarthTangent = Math.sqrt(distanceCamera2Origin * distanceCamera2Origin - R * R);
-	            var sinθ = distanceCamera2EarthTangent / distanceCamera2Origin;
-	            var distanceCamera2Atmosphere = distanceCamera2EarthTangent * sinθ;
-	            var vector = camera.getLightDirection().setLength(distanceCamera2Atmosphere);
-	            var atmosphereNewPosition = Vector.verticePlusVector(camera.getPosition(), vector);
-	            this.geometry.setPosition(atmosphereNewPosition);
-	            this.geometry.setVectorX(camera.getVectorX());
-	            this.geometry.setVectorY(camera.getVectorY());
-	            this.geometry.setVectorZ(camera.getVectorZ());
-	            this.geometry.localScale(sinθ, sinθ, sinθ);
-	            _super.prototype.onDraw.call(this, camera);
-	            gl.enable(gl.DEPTH_TEST);
-	            gl.depthMask(true);
-	            gl.disable(gl.BLEND);
-	        };
-	        return Atmosphere;
-	    }(MeshGraphic));
-	    return Atmosphere;
+	        return AutonaviLabelLayer;
+	    }(LabelLayer_1.default));
+	    Object.defineProperty(exports, "__esModule", { value: true });
+	    exports.default = AutonaviLabelLayer;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -3183,7 +3168,387 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(20), __webpack_require__(21)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Program, Graphic) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(20), __webpack_require__(33)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Tile, SubTiledLayer) {
+	    "use strict";
+	    var LabelLayer = (function (_super) {
+	        __extends(LabelLayer, _super);
+	        function LabelLayer() {
+	            _super.call(this, -1);
+	            this.minLevel = 4;
+	        }
+	        LabelLayer.prototype.onDraw = function (camera) {
+	            var program = Tile.findProgram();
+	            if (!program) {
+	                return;
+	            }
+	            program.use();
+	            var gl = Kernel.gl;
+	            gl.enable(gl.BLEND);
+	            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	            var pmvMatrix = camera.getProjViewMatrixForDraw();
+	            var locPMVMatrix = program.getUniformLocation('uPMVMatrix');
+	            gl.uniformMatrix4fv(locPMVMatrix, false, pmvMatrix.getFloat32Array());
+	            gl.activeTexture(gl.TEXTURE0);
+	            var locSampler = program.getUniformLocation('uSampler');
+	            gl.uniform1i(locSampler, 0);
+	            gl.depthFunc(gl.ALWAYS);
+	            _super.prototype.onDraw.call(this, camera);
+	            gl.depthFunc(gl.LEQUAL);
+	            gl.disable(gl.BLEND);
+	        };
+	        LabelLayer.prototype.updateTiles = function (level, visibleTileGrids) {
+	            var _this = this;
+	            var validTileGrids = visibleTileGrids.filter(function (tileGrid) { return tileGrid.level >= _this.minLevel; });
+	            _super.prototype.updateTiles.call(this, level, validTileGrids, true);
+	        };
+	        return LabelLayer;
+	    }(SubTiledLayer));
+	    Object.defineProperty(exports, "__esModule", { value: true });
+	    exports.default = LabelLayer;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(24), __webpack_require__(9), __webpack_require__(25), __webpack_require__(21), __webpack_require__(28), __webpack_require__(31), __webpack_require__(32), __webpack_require__(12)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Extent, MathUtils, MeshGraphic, TileMaterial, TileGeometry, Vertice, Triangle, TileGrid_1) {
+	    "use strict";
+	    var TileInfo = (function () {
+	        function TileInfo(level, row, column, url) {
+	            this.level = level;
+	            this.row = row;
+	            this.column = column;
+	            this.url = url;
+	            this.minLon = null;
+	            this.minLat = null;
+	            this.maxLon = null;
+	            this.maxLat = null;
+	            this.minX = null;
+	            this.minY = null;
+	            this.maxX = null;
+	            this.maxY = null;
+	            this.segment = 1;
+	            this._setTileInfo();
+	            this._handleGlobeTile();
+	            this.material = new TileMaterial(this.level, this.url);
+	        }
+	        TileInfo.prototype._setTileInfo = function () {
+	            var Egeo = MathUtils.getTileGeographicEnvelopByGrid(this.level, this.row, this.column);
+	            this.minLon = Egeo.minLon;
+	            this.minLat = Egeo.minLat;
+	            this.maxLon = Egeo.maxLon;
+	            this.maxLat = Egeo.maxLat;
+	            var minCoord = MathUtils.degreeGeographicToWebMercator(this.minLon, this.minLat);
+	            var maxCoord = MathUtils.degreeGeographicToWebMercator(this.maxLon, this.maxLat);
+	            this.minX = minCoord[0];
+	            this.minY = minCoord[1];
+	            this.maxX = maxCoord[0];
+	            this.maxY = maxCoord[1];
+	        };
+	        TileInfo.prototype._handleGlobeTile = function () {
+	            var BASE_LEVEL = Kernel.BASE_LEVEL;
+	            if (this.level < BASE_LEVEL) {
+	                var changeLevel = BASE_LEVEL - this.level;
+	                this.segment = Math.pow(2, changeLevel);
+	            }
+	            else {
+	                this.segment = 1;
+	            }
+	            this._handleTile();
+	        };
+	        TileInfo.prototype._handleTile = function () {
+	            this.visible = true;
+	            var verticeArray = [];
+	            var triangleArray = [];
+	            var vertices = [];
+	            var indices = [];
+	            var textureCoords = [];
+	            var deltaX = (this.maxX - this.minX) / this.segment;
+	            var deltaY = (this.maxY - this.minY) / this.segment;
+	            var deltaTextureCoord = 1.0 / this.segment;
+	            var changeElevation = 0;
+	            var levelDeltaR = 0;
+	            var mercatorXs = [];
+	            var mercatorYs = [];
+	            var textureSs = [];
+	            var textureTs = [];
+	            var i, j;
+	            for (i = 0; i <= this.segment; i++) {
+	                mercatorXs.push(this.minX + i * deltaX);
+	                mercatorYs.push(this.maxY - i * deltaY);
+	                var b = i * deltaTextureCoord;
+	                textureSs.push(b);
+	                textureTs.push(1 - b);
+	            }
+	            var index = 0;
+	            for (i = 0; i <= this.segment; i++) {
+	                for (j = 0; j <= this.segment; j++) {
+	                    var merX = mercatorXs[j];
+	                    var merY = mercatorYs[i];
+	                    var ele = 0;
+	                    var lonlat = MathUtils.webMercatorToDegreeGeographic(merX, merY);
+	                    var p = MathUtils.geographicToCartesianCoord(lonlat[0], lonlat[1], Kernel.EARTH_RADIUS + ele + levelDeltaR).getArray();
+	                    vertices = vertices.concat(p);
+	                    textureCoords = textureCoords.concat(textureSs[j], textureTs[i]);
+	                    var v = new Vertice({
+	                        p: p,
+	                        i: index,
+	                        uv: [textureSs[j], textureTs[i]]
+	                    });
+	                    verticeArray.push(v);
+	                    index++;
+	                }
+	            }
+	            for (i = 0; i < this.segment; i++) {
+	                for (j = 0; j < this.segment; j++) {
+	                    var idx0 = (this.segment + 1) * i + j;
+	                    var idx1 = (this.segment + 1) * (i + 1) + j;
+	                    var idx2 = idx1 + 1;
+	                    var idx3 = idx0 + 1;
+	                    indices = indices.concat(idx0, idx1, idx2);
+	                    indices = indices.concat(idx2, idx3, idx0);
+	                    var v0 = verticeArray[idx0];
+	                    var v1 = verticeArray[idx1];
+	                    var v2 = verticeArray[idx2];
+	                    var v3 = verticeArray[idx3];
+	                    var triangle1 = new Triangle(v0, v1, v2);
+	                    var triangle2 = new Triangle(v2, v3, v0);
+	                    triangleArray.push(triangle1, triangle2);
+	                }
+	            }
+	            this.geometry = new TileGeometry(verticeArray, triangleArray);
+	        };
+	        return TileInfo;
+	    }());
+	    var Tile = (function (_super) {
+	        __extends(Tile, _super);
+	        function Tile(geometry, material, tileInfo) {
+	            _super.call(this, geometry, material);
+	            this.geometry = geometry;
+	            this.material = material;
+	            this.tileInfo = tileInfo;
+	        }
+	        Tile.getInstance = function (level, row, column, url) {
+	            var tileInfo = new TileInfo(level, row, column, url);
+	            return new Tile(tileInfo.geometry, tileInfo.material, tileInfo);
+	        };
+	        Tile.prototype.updateShaderUniforms = function (camera) {
+	        };
+	        Tile.prototype.getExtent = function () {
+	            var tileInfo = this.tileInfo;
+	            var tileGrid = new TileGrid_1.default(tileInfo.level, tileInfo.row, tileInfo.column);
+	            return new Extent(this.tileInfo.minLon, this.tileInfo.minLat, this.tileInfo.maxLon, this.tileInfo.maxLat, tileGrid);
+	        };
+	        Tile.prototype.shouldDraw = function (camera) {
+	            return this.tileInfo.visible && _super.prototype.shouldDraw.call(this, camera);
+	        };
+	        Tile.prototype.destroy = function () {
+	            _super.prototype.destroy.call(this);
+	            this.subTiledLayer = null;
+	        };
+	        return Tile;
+	    }(MeshGraphic));
+	    return Tile;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(22), __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial, ImageUtils) {
+	    "use strict";
+	    var TileMaterial = (function (_super) {
+	        __extends(TileMaterial, _super);
+	        function TileMaterial(level, imageOrUrl) {
+	            _super.call(this, imageOrUrl, true);
+	            this.level = level >= 0 ? level : 20;
+	        }
+	        TileMaterial.prototype.onLoad = function () {
+	            if (this.level <= ImageUtils.MAX_LEVEL) {
+	                ImageUtils.add(this.image.src, this.image);
+	            }
+	            _super.prototype.onLoad.call(this);
+	        };
+	        return TileMaterial;
+	    }(MeshTextureMaterial));
+	    return TileMaterial;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(23), __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Material, ImageUtils) {
+	    "use strict";
+	    var MeshTextureMaterial = (function (_super) {
+	        __extends(MeshTextureMaterial, _super);
+	        function MeshTextureMaterial(imageOrUrl, flipY) {
+	            if (imageOrUrl === void 0) { imageOrUrl = null; }
+	            if (flipY === void 0) { flipY = false; }
+	            _super.call(this);
+	            this.flipY = flipY;
+	            this.ready = false;
+	            this.deleted = false;
+	            this.texture = Kernel.gl.createTexture();
+	            if (imageOrUrl) {
+	                this.setImageOrUrl(imageOrUrl);
+	            }
+	        }
+	        MeshTextureMaterial.prototype.isReady = function () {
+	            return this.ready && !this.deleted;
+	        };
+	        MeshTextureMaterial.prototype.setImageOrUrl = function (imageOrUrl) {
+	            if (!imageOrUrl) {
+	                return;
+	            }
+	            if (imageOrUrl instanceof Image && imageOrUrl.width > 0 && imageOrUrl.height > 0) {
+	                this.setImage(imageOrUrl);
+	            }
+	            else if (typeof imageOrUrl === "string") {
+	                this.setImageUrl(imageOrUrl);
+	            }
+	        };
+	        MeshTextureMaterial.prototype.setImage = function (image) {
+	            if (image.width > 0 && image.height > 0) {
+	                this.ready = false;
+	                this.image = image;
+	                this.onLoad();
+	            }
+	        };
+	        MeshTextureMaterial.prototype.setImageUrl = function (url) {
+	            var tileImage = ImageUtils.get(url);
+	            if (tileImage) {
+	                this.setImage(tileImage);
+	            }
+	            else {
+	                this.ready = false;
+	                this.image = new Image();
+	                this.image.crossOrigin = 'anonymous';
+	                this.image.onload = this.onLoad.bind(this);
+	                this.image.src = url;
+	            }
+	        };
+	        MeshTextureMaterial.prototype.onLoad = function () {
+	            if (this.deleted) {
+	                return;
+	            }
+	            var gl = Kernel.gl;
+	            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+	            if (this.flipY) {
+	                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, +true);
+	            }
+	            else {
+	                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, +false);
+	            }
+	            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
+	            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	            this.ready = true;
+	        };
+	        MeshTextureMaterial.prototype.destroy = function () {
+	            var gl = Kernel.gl;
+	            if (this.texture) {
+	                gl.deleteTexture(this.texture);
+	            }
+	            if (this.image && !this.ready) {
+	                this.image.src = "";
+	            }
+	            this.ready = false;
+	            this.texture = null;
+	            this.deleted = true;
+	        };
+	        return MeshTextureMaterial;
+	    }(Material));
+	    return MeshTextureMaterial;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
+	    "use strict";
+	    var Material = (function () {
+	        function Material() {
+	        }
+	        return Material;
+	    }());
+	    return Material;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
+	    "use strict";
+	    var Extent = (function () {
+	        function Extent(minLon, minLat, maxLon, maxLat, tileGrid) {
+	            this.minLon = minLon;
+	            this.minLat = minLat;
+	            this.maxLon = maxLon;
+	            this.maxLat = maxLat;
+	            this.tileGrid = tileGrid;
+	        }
+	        Extent.prototype.getMinLon = function () {
+	            return this.minLon;
+	        };
+	        Extent.prototype.getMinLat = function () {
+	            return this.minLat;
+	        };
+	        Extent.prototype.getMaxLon = function () {
+	            return this.maxLon;
+	        };
+	        Extent.prototype.getMaxLat = function () {
+	            return this.maxLat;
+	        };
+	        Extent.prototype.getTileGrid = function () {
+	            return this.tileGrid;
+	        };
+	        Extent.prototype.toJson = function () {
+	            return [this.minLon, this.minLat, this.maxLon, this.maxLat];
+	        };
+	        Extent.union = function (extents) {
+	            return null;
+	        };
+	        return Extent;
+	    }());
+	    return Extent;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(26), __webpack_require__(27)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Program, Graphic) {
 	    "use strict";
 	    var vs = "\nattribute vec3 aPosition;\nattribute vec2 aUV;\nvarying vec2 vUV;\nuniform mat4 uPMVMatrix;\n\nvoid main()\n{\n\tgl_Position = uPMVMatrix * vec4(aPosition,1.0);\n\tvUV = aUV;\n}\n";
 	    var fs = "\nprecision mediump float;\nvarying vec2 vUV;\nuniform sampler2D uSampler;\n\nvoid main()\n{\n\tgl_FragColor = texture2D(uSampler, vec2(vUV.s, vUV.t));\n}\n";
@@ -3241,10 +3606,10 @@
 
 
 /***/ },
-/* 20 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
 	    var Program = (function () {
 	        function Program(vs, fs) {
@@ -3393,10 +3758,10 @@
 
 
 /***/ },
-/* 21 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
 	    var Graphic = (function () {
 	        function Graphic(geometry, material) {
@@ -3442,7 +3807,7 @@
 
 
 /***/ },
-/* 22 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3450,109 +3815,23 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(23), __webpack_require__(24), __webpack_require__(25), __webpack_require__(8), __webpack_require__(14)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshVertice, Triangle, Mesh, Vertice, Matrix) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(29)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Mesh) {
 	    "use strict";
-	    var Atmosphere = (function (_super) {
-	        __extends(Atmosphere, _super);
-	        function Atmosphere() {
+	    var TileGeometry = (function (_super) {
+	        __extends(TileGeometry, _super);
+	        function TileGeometry(vertices, triangles) {
 	            _super.call(this);
-	            this.segment = 360;
-	            this.radius1 = Kernel.EARTH_RADIUS * 0.99;
-	            this.radius2 = Kernel.EARTH_RADIUS * 1.01;
-	            this.buildTriangles();
+	            this.vertices = vertices;
+	            this.triangles = triangles;
 	        }
-	        Atmosphere.prototype.buildTriangles = function () {
-	            this.vertices = [];
-	            this.triangles = [];
-	            var mat1 = new Matrix();
-	            mat1.setPosition(new Vertice(0, this.radius1, 0));
-	            var meshVertices1 = [];
-	            var mat2 = new Matrix();
-	            mat2.setPosition(new Vertice(0, this.radius2, 0));
-	            var meshVertices2 = [];
-	            var deltaRadian = -Math.PI * 2 / this.segment;
-	            var deltaS = 1.0 / this.segment;
-	            var u = 0;
-	            for (var i = 0; i <= this.segment; i++) {
-	                u = deltaS * i;
-	                if (u > 1) {
-	                    u = 1;
-	                }
-	                meshVertices1.push(new MeshVertice({
-	                    i: i,
-	                    p: mat1.getPosition().getArray(),
-	                    uv: [u, 1]
-	                }));
-	                meshVertices2.push(new MeshVertice({
-	                    i: this.segment + 1 + i,
-	                    p: mat2.getPosition().getArray(),
-	                    uv: [u, 0]
-	                }));
-	                if (i > 0) {
-	                    var vLeftTop = meshVertices2[i - 1];
-	                    var vLeftBottom = meshVertices1[i - 1];
-	                    var vRightTop = meshVertices2[i];
-	                    var vRightBottom = meshVertices1[i];
-	                    (_a = this.triangles).push.apply(_a, Triangle.assembleQuad(vLeftTop, vLeftBottom, vRightTop, vRightBottom));
-	                }
-	                mat1.worldRotateZ(deltaRadian);
-	                mat2.worldRotateZ(deltaRadian);
-	            }
-	            (_b = this.vertices).push.apply(_b, meshVertices1.concat(meshVertices2));
-	            var _a, _b;
-	        };
-	        return Atmosphere;
+	        return TileGeometry;
 	    }(Mesh));
-	    return Atmosphere;
+	    return TileGeometry;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
-	    "use strict";
-	    var MeshVertice = (function () {
-	        function MeshVertice(args) {
-	            this.i = args.i;
-	            this.p = args.p;
-	            this.uv = args.uv;
-	            this.n = args.n;
-	            this.c = args.c;
-	        }
-	        return MeshVertice;
-	    }());
-	    return MeshVertice;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
-	    "use strict";
-	    var Triangle = (function () {
-	        function Triangle(v1, v2, v3) {
-	            this.v1 = v1;
-	            this.v2 = v2;
-	            this.v3 = v3;
-	        }
-	        Triangle.prototype.setColor = function (c) {
-	            this.v1.c = this.v2.c = this.v3.c = c;
-	        };
-	        Triangle.assembleQuad = function (leftTop, leftBottom, rightTop, rightBottom) {
-	            return [new Triangle(leftTop, leftBottom, rightTop), new Triangle(rightTop, leftBottom, rightBottom)];
-	        };
-	        return Triangle;
-	    }());
-	    return Triangle;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 25 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3560,7 +3839,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(15), __webpack_require__(26)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Object3D, VertexBufferObject) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(14), __webpack_require__(30)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Object3D, VertexBufferObject) {
 	    "use strict";
 	    var Mesh = (function (_super) {
 	        __extends(Mesh, _super);
@@ -3691,10 +3970,10 @@
 
 
 /***/ },
-/* 26 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
 	    var maxBufferSize = 50;
 	    var buffers = [];
@@ -3744,118 +4023,51 @@
 
 
 /***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(28), __webpack_require__(16)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Material, ImageUtils) {
-	    "use strict";
-	    var MeshTextureMaterial = (function (_super) {
-	        __extends(MeshTextureMaterial, _super);
-	        function MeshTextureMaterial(imageOrUrl, flipY) {
-	            if (imageOrUrl === void 0) { imageOrUrl = null; }
-	            if (flipY === void 0) { flipY = false; }
-	            _super.call(this);
-	            this.flipY = flipY;
-	            this.ready = false;
-	            this.deleted = false;
-	            this.texture = Kernel.gl.createTexture();
-	            if (imageOrUrl) {
-	                this.setImageOrUrl(imageOrUrl);
-	            }
-	        }
-	        MeshTextureMaterial.prototype.isReady = function () {
-	            return this.ready && !this.deleted;
-	        };
-	        MeshTextureMaterial.prototype.setImageOrUrl = function (imageOrUrl) {
-	            if (!imageOrUrl) {
-	                return;
-	            }
-	            if (imageOrUrl instanceof Image && imageOrUrl.width > 0 && imageOrUrl.height > 0) {
-	                this.setImage(imageOrUrl);
-	            }
-	            else if (typeof imageOrUrl === "string") {
-	                this.setImageUrl(imageOrUrl);
-	            }
-	        };
-	        MeshTextureMaterial.prototype.setImage = function (image) {
-	            if (image.width > 0 && image.height > 0) {
-	                this.ready = false;
-	                this.image = image;
-	                this.onLoad();
-	            }
-	        };
-	        MeshTextureMaterial.prototype.setImageUrl = function (url) {
-	            var tileImage = ImageUtils.get(url);
-	            if (tileImage) {
-	                this.setImage(tileImage);
-	            }
-	            else {
-	                this.ready = false;
-	                this.image = new Image();
-	                this.image.crossOrigin = 'anonymous';
-	                this.image.onload = this.onLoad.bind(this);
-	                this.image.src = url;
-	            }
-	        };
-	        MeshTextureMaterial.prototype.onLoad = function () {
-	            if (this.deleted) {
-	                return;
-	            }
-	            var gl = Kernel.gl;
-	            gl.bindTexture(gl.TEXTURE_2D, this.texture);
-	            if (this.flipY) {
-	                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, +true);
-	            }
-	            else {
-	                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, +false);
-	            }
-	            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
-	            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-	            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	            this.ready = true;
-	        };
-	        MeshTextureMaterial.prototype.destroy = function () {
-	            var gl = Kernel.gl;
-	            if (this.texture) {
-	                gl.deleteTexture(this.texture);
-	            }
-	            if (this.image && !this.ready) {
-	                this.image.src = "";
-	            }
-	            this.ready = false;
-	            this.texture = null;
-	            this.deleted = true;
-	        };
-	        return MeshTextureMaterial;
-	    }(Material));
-	    return MeshTextureMaterial;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 28 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
 	    "use strict";
-	    var Material = (function () {
-	        function Material() {
+	    var MeshVertice = (function () {
+	        function MeshVertice(args) {
+	            this.i = args.i;
+	            this.p = args.p;
+	            this.uv = args.uv;
+	            this.n = args.n;
+	            this.c = args.c;
 	        }
-	        return Material;
+	        return MeshVertice;
 	    }());
-	    return Material;
+	    return MeshVertice;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ },
-/* 29 */
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
+	    "use strict";
+	    var Triangle = (function () {
+	        function Triangle(v1, v2, v3) {
+	            this.v1 = v1;
+	            this.v2 = v2;
+	            this.v3 = v3;
+	        }
+	        Triangle.prototype.setColor = function (c) {
+	            this.v1.c = this.v2.c = this.v3.c = c;
+	        };
+	        Triangle.assembleQuad = function (leftTop, leftBottom, rightTop, rightBottom) {
+	            return [new Triangle(leftTop, leftBottom, rightTop), new Triangle(rightTop, leftBottom, rightBottom)];
+	        };
+	        return Triangle;
+	    }());
+	    return Triangle;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3863,7 +4075,276 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(9), __webpack_require__(10), __webpack_require__(20), __webpack_require__(21), __webpack_require__(30), __webpack_require__(26)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Program, Graphic, PoiMaterial, VertexBufferObject) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(24), __webpack_require__(12), __webpack_require__(16), __webpack_require__(20)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Extent, TileGrid_1, GraphicGroup, Tile) {
+	    "use strict";
+	    var SubTiledLayer = (function (_super) {
+	        __extends(SubTiledLayer, _super);
+	        function SubTiledLayer(level) {
+	            _super.call(this);
+	            this.level = level;
+	        }
+	        SubTiledLayer.prototype.getLevel = function () {
+	            return this.level;
+	        };
+	        SubTiledLayer.prototype.showAllTiles = function () {
+	            this.visible = true;
+	            this.children.forEach(function (tile) {
+	                tile.setVisible(true);
+	            });
+	        };
+	        SubTiledLayer.prototype.hideAllTiles = function () {
+	            this.visible = false;
+	            this.children.forEach(function (tile) {
+	                tile.setVisible(false);
+	            });
+	        };
+	        SubTiledLayer.prototype.add = function (tile) {
+	            if (tile.tileInfo.level === this.level) {
+	                _super.prototype.add.call(this, tile);
+	                tile.subTiledLayer = this;
+	            }
+	        };
+	        SubTiledLayer.prototype.findTile = function (level, row, column) {
+	            var length = this.children.length;
+	            for (var i = 0; i < length; i++) {
+	                var tile = this.children[i];
+	                if (tile.tileInfo.level === level && tile.tileInfo.row === row && tile.tileInfo.column === column) {
+	                    return tile;
+	                }
+	            }
+	            return null;
+	        };
+	        SubTiledLayer.prototype.updateTiles = function (level, visibleTileGrids, addNew) {
+	            this.level = level;
+	            function checkTileExist(tileArray, lev, row, col) {
+	                var result = {
+	                    isExist: false,
+	                    index: -1
+	                };
+	                for (var m = 0; m < tileArray.length; m++) {
+	                    var tileInfo = tileArray[m];
+	                    if (tileInfo.level === lev && tileInfo.row === row && tileInfo.column === col) {
+	                        result.isExist = true;
+	                        result.index = m;
+	                        return result;
+	                    }
+	                }
+	                return result;
+	            }
+	            var tilesNeedDelete = [];
+	            var i, tile;
+	            for (i = 0; i < this.children.length; i++) {
+	                tile = this.children[i];
+	                var checkResult = checkTileExist(visibleTileGrids, tile.tileInfo.level, tile.tileInfo.row, tile.tileInfo.column);
+	                var isExist = checkResult.isExist;
+	                if (isExist) {
+	                    visibleTileGrids.splice(checkResult.index, 1);
+	                }
+	                else {
+	                    tilesNeedDelete.push(tile);
+	                }
+	            }
+	            while (tilesNeedDelete.length > 0) {
+	                var b = this.remove(tilesNeedDelete[0]);
+	                tilesNeedDelete.splice(0, 1);
+	                if (!b) {
+	                    console.debug("subTiledLayer.remove(tilesNeedDelete[0])失败");
+	                }
+	            }
+	            if (addNew) {
+	                for (i = 0; i < visibleTileGrids.length; i++) {
+	                    var tileGridInfo = visibleTileGrids[i];
+	                    var args = {
+	                        level: tileGridInfo.level,
+	                        row: tileGridInfo.row,
+	                        column: tileGridInfo.column,
+	                        url: ""
+	                    };
+	                    args.url = this.getTileUrl(args.level, args.row, args.column);
+	                    tile = Tile.getInstance(args.level, args.row, args.column, args.url);
+	                    this.add(tile);
+	                }
+	            }
+	        };
+	        SubTiledLayer.prototype.getTileUrl = function (level, row, column) {
+	            if (this.parent && typeof this.parent.getTileUrl === "function") {
+	                return this.parent.getTileUrl(level, row, column);
+	            }
+	            return "";
+	        };
+	        SubTiledLayer.prototype.checkIfAllTilesLoaded = function () {
+	            for (var i = 0; i < this.children.length; i++) {
+	                var tile = this.children[i];
+	                if (tile) {
+	                    var isTileLoaded = tile.material.isReady();
+	                    if (!isTileLoaded) {
+	                        return false;
+	                    }
+	                }
+	            }
+	            return true;
+	        };
+	        SubTiledLayer.prototype.getExtent = function () {
+	            return Extent.union(this.getExtents());
+	        };
+	        SubTiledLayer.prototype.getExtents = function () {
+	            return this.children.map(function (item) { return item.getExtent(); });
+	        };
+	        SubTiledLayer.prototype.getVisibleTileGrids = function () {
+	            var tileGrids = [];
+	            if (this.visible) {
+	                this.children.forEach(function (tile) {
+	                    if (tile.visible) {
+	                        tileGrids.push(new TileGrid_1.default(tile.tileInfo.level, tile.tileInfo.row, tile.tileInfo.column));
+	                    }
+	                });
+	            }
+	            return tileGrids;
+	        };
+	        SubTiledLayer.prototype.getShouldDrawTilesCount = function () {
+	            return this.visible ? this.children.filter(function (tile) {
+	                return tile.visible && tile.isReady();
+	            }).length : 0;
+	        };
+	        return SubTiledLayer;
+	    }(GraphicGroup));
+	    return SubTiledLayer;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(25), __webpack_require__(35), __webpack_require__(22), __webpack_require__(6)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshGraphic, AtmosphereGeometry, MeshTextureMaterial, Vector) {
+	    "use strict";
+	    var Atmosphere = (function (_super) {
+	        __extends(Atmosphere, _super);
+	        function Atmosphere(geometry, material) {
+	            _super.call(this, geometry, material);
+	            this.geometry = geometry;
+	            this.material = material;
+	        }
+	        Atmosphere.getInstance = function () {
+	            var geometry = new AtmosphereGeometry();
+	            var imageUrl = "/WebGlobe/src/world/images/atmosphere.png";
+	            var material = new MeshTextureMaterial(imageUrl, false);
+	            return new Atmosphere(geometry, material);
+	        };
+	        Atmosphere.prototype.shouldDraw = function (camera) {
+	            return camera.getLevel() < Kernel.EARTH_FULL_OVERLAP_SCREEN_LEVEL && _super.prototype.shouldDraw.call(this, camera);
+	        };
+	        Atmosphere.prototype.onDraw = function (camera) {
+	            var gl = Kernel.gl;
+	            gl.disable(gl.DEPTH_TEST);
+	            gl.depthMask(false);
+	            gl.enable(gl.BLEND);
+	            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	            this.geometry.getMatrix().setUnitMatrix();
+	            var R = Kernel.EARTH_RADIUS;
+	            var distanceCamera2Origin = camera.getDistance2EarthOrigin();
+	            var distanceCamera2EarthTangent = Math.sqrt(distanceCamera2Origin * distanceCamera2Origin - R * R);
+	            var sinθ = distanceCamera2EarthTangent / distanceCamera2Origin;
+	            var distanceCamera2Atmosphere = distanceCamera2EarthTangent * sinθ;
+	            var vector = camera.getLightDirection().setLength(distanceCamera2Atmosphere);
+	            var atmosphereNewPosition = Vector.verticePlusVector(camera.getPosition(), vector);
+	            this.geometry.setPosition(atmosphereNewPosition);
+	            this.geometry.setVectorX(camera.getVectorX());
+	            this.geometry.setVectorY(camera.getVectorY());
+	            this.geometry.setVectorZ(camera.getVectorZ());
+	            this.geometry.localScale(sinθ, sinθ, sinθ);
+	            _super.prototype.onDraw.call(this, camera);
+	            gl.enable(gl.DEPTH_TEST);
+	            gl.depthMask(true);
+	            gl.disable(gl.BLEND);
+	        };
+	        return Atmosphere;
+	    }(MeshGraphic));
+	    return Atmosphere;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(31), __webpack_require__(32), __webpack_require__(29), __webpack_require__(7), __webpack_require__(13)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshVertice, Triangle, Mesh, Vertice, Matrix) {
+	    "use strict";
+	    var Atmosphere = (function (_super) {
+	        __extends(Atmosphere, _super);
+	        function Atmosphere() {
+	            _super.call(this);
+	            this.segment = 360;
+	            this.radius1 = Kernel.EARTH_RADIUS * 0.99;
+	            this.radius2 = Kernel.EARTH_RADIUS * 1.01;
+	            this.buildTriangles();
+	        }
+	        Atmosphere.prototype.buildTriangles = function () {
+	            this.vertices = [];
+	            this.triangles = [];
+	            var mat1 = new Matrix();
+	            mat1.setPosition(new Vertice(0, this.radius1, 0));
+	            var meshVertices1 = [];
+	            var mat2 = new Matrix();
+	            mat2.setPosition(new Vertice(0, this.radius2, 0));
+	            var meshVertices2 = [];
+	            var deltaRadian = -Math.PI * 2 / this.segment;
+	            var deltaS = 1.0 / this.segment;
+	            var u = 0;
+	            for (var i = 0; i <= this.segment; i++) {
+	                u = deltaS * i;
+	                if (u > 1) {
+	                    u = 1;
+	                }
+	                meshVertices1.push(new MeshVertice({
+	                    i: i,
+	                    p: mat1.getPosition().getArray(),
+	                    uv: [u, 1]
+	                }));
+	                meshVertices2.push(new MeshVertice({
+	                    i: this.segment + 1 + i,
+	                    p: mat2.getPosition().getArray(),
+	                    uv: [u, 0]
+	                }));
+	                if (i > 0) {
+	                    var vLeftTop = meshVertices2[i - 1];
+	                    var vLeftBottom = meshVertices1[i - 1];
+	                    var vRightTop = meshVertices2[i];
+	                    var vRightBottom = meshVertices1[i];
+	                    (_a = this.triangles).push.apply(_a, Triangle.assembleQuad(vLeftTop, vLeftBottom, vRightTop, vRightBottom));
+	                }
+	                mat1.worldRotateZ(deltaRadian);
+	                mat2.worldRotateZ(deltaRadian);
+	            }
+	            (_b = this.vertices).push.apply(_b, meshVertices1.concat(meshVertices2));
+	            var _a, _b;
+	        };
+	        return Atmosphere;
+	    }(Mesh));
+	    return Atmosphere;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(8), __webpack_require__(9), __webpack_require__(26), __webpack_require__(27), __webpack_require__(37), __webpack_require__(30)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Program, Graphic, PoiMaterial, VertexBufferObject) {
 	    "use strict";
 	    var Poi = (function () {
 	        function Poi(x, y, z, uuid, name, address, phone) {
@@ -3969,7 +4450,7 @@
 
 
 /***/ },
-/* 30 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3977,7 +4458,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(27)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(22)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial) {
 	    "use strict";
 	    var PoiMaterial = (function (_super) {
 	        __extends(PoiMaterial, _super);
@@ -3993,7 +4474,7 @@
 
 
 /***/ },
-/* 31 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4001,7 +4482,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(32)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
 	    "use strict";
 	    var GoogleTiledLayer = (function (_super) {
 	        __extends(GoogleTiledLayer, _super);
@@ -4034,7 +4515,7 @@
 
 
 /***/ },
-/* 32 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4042,7 +4523,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(33), __webpack_require__(3), __webpack_require__(34), __webpack_require__(35), __webpack_require__(9)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Extent, GraphicGroup, SubTiledLayer, Tile, Utils) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(8), __webpack_require__(3), __webpack_require__(24), __webpack_require__(20), __webpack_require__(16), __webpack_require__(33)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Kernel, Extent, Tile, GraphicGroup, SubTiledLayer) {
 	    "use strict";
 	    var TiledLayer = (function (_super) {
 	        __extends(TiledLayer, _super);
@@ -4093,7 +4574,7 @@
 	            }
 	            for (subLevel = 2; subLevel <= lastLevel; subLevel++) {
 	                var addNew = lastLevel === subLevel || (lastLevel - subLevel) > this.imageRequestOptimizeDeltaLevel;
-	                this.children[subLevel].updateTiles(levelsTileGrids[subLevel], addNew);
+	                this.children[subLevel].updateTiles(subLevel, levelsTileGrids[subLevel], addNew);
 	            }
 	        };
 	        TiledLayer.prototype._updateSubLayerCount = function (level) {
@@ -4181,10 +4662,6 @@
 	            _super.prototype.onDraw.call(this, camera);
 	            gl.depthFunc(gl.LEQUAL);
 	        };
-	        TiledLayer.prototype.add = function (subTiledLayer) {
-	            _super.prototype.add.call(this, subTiledLayer);
-	            subTiledLayer.tiledLayer = this;
-	        };
 	        TiledLayer.prototype.getExtent = function (level) {
 	            var extents = this.getExtents(level);
 	            return Extent.union(extents);
@@ -4205,13 +4682,21 @@
 	            }
 	            return url;
 	        };
+	        TiledLayer.prototype.getLastLevelVisibleTileGrids = function () {
+	            var tileGrids = null;
+	            var subTiledLayer = this.children[this.children.length - 1];
+	            if (subTiledLayer) {
+	                tileGrids = subTiledLayer.getVisibleTileGrids();
+	            }
+	            return tileGrids;
+	        };
 	        TiledLayer.prototype.logVisibleTiles = function () {
 	            var result = [];
 	            this.children.forEach(function (subLayer) {
 	                var allCount = subLayer.children.length;
 	                var visibleCount = subLayer.getShouldDrawTilesCount();
 	                result.push({
-	                    level: subLayer.level,
+	                    level: subLayer.getLevel(),
 	                    allCount: allCount,
 	                    visibleCount: visibleCount
 	                });
@@ -4225,48 +4710,7 @@
 
 
 /***/ },
-/* 33 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
-	    "use strict";
-	    var Extent = (function () {
-	        function Extent(minLon, minLat, maxLon, maxLat, tileGrid) {
-	            this.minLon = minLon;
-	            this.minLat = minLat;
-	            this.maxLon = maxLon;
-	            this.maxLat = maxLat;
-	            this.tileGrid = tileGrid;
-	        }
-	        Extent.prototype.getMinLon = function () {
-	            return this.minLon;
-	        };
-	        Extent.prototype.getMinLat = function () {
-	            return this.minLat;
-	        };
-	        Extent.prototype.getMaxLon = function () {
-	            return this.maxLon;
-	        };
-	        Extent.prototype.getMaxLat = function () {
-	            return this.maxLat;
-	        };
-	        Extent.prototype.getTileGrid = function () {
-	            return this.tileGrid;
-	        };
-	        Extent.prototype.toJson = function () {
-	            return [this.minLon, this.minLat, this.maxLon, this.maxLat];
-	        };
-	        Extent.union = function (extents) {
-	            return null;
-	        };
-	        return Extent;
-	    }());
-	    return Extent;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 34 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4274,340 +4718,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(33), __webpack_require__(3), __webpack_require__(35)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Extent, GraphicGroup, Tile) {
-	    "use strict";
-	    var SubTiledLayer = (function (_super) {
-	        __extends(SubTiledLayer, _super);
-	        function SubTiledLayer(level) {
-	            _super.call(this);
-	            this.level = level;
-	            this.tiledLayer = null;
-	        }
-	        SubTiledLayer.prototype.showAllTiles = function () {
-	            this.visible = true;
-	            this.children.forEach(function (tile) {
-	                tile.setVisible(true);
-	            });
-	        };
-	        SubTiledLayer.prototype.hideAllTiles = function () {
-	            this.visible = false;
-	            this.children.forEach(function (tile) {
-	                tile.setVisible(false);
-	            });
-	        };
-	        SubTiledLayer.prototype.add = function (tile) {
-	            if (tile.tileInfo.level === this.level) {
-	                _super.prototype.add.call(this, tile);
-	                tile.subTiledLayer = this;
-	            }
-	        };
-	        SubTiledLayer.prototype.destroy = function () {
-	            _super.prototype.destroy.call(this);
-	            this.tiledLayer = null;
-	        };
-	        SubTiledLayer.prototype.findTile = function (level, row, column) {
-	            var length = this.children.length;
-	            for (var i = 0; i < length; i++) {
-	                var tile = this.children[i];
-	                if (tile.tileInfo.level === level && tile.tileInfo.row === row && tile.tileInfo.column === column) {
-	                    return tile;
-	                }
-	            }
-	            return null;
-	        };
-	        SubTiledLayer.prototype.updateTiles = function (visibleTileGrids, bAddNew) {
-	            function checkTileExist(tileArray, lev, row, col) {
-	                var result = {
-	                    isExist: false,
-	                    index: -1
-	                };
-	                for (var m = 0; m < tileArray.length; m++) {
-	                    var tileInfo = tileArray[m];
-	                    if (tileInfo.level === lev && tileInfo.row === row && tileInfo.column === col) {
-	                        result.isExist = true;
-	                        result.index = m;
-	                        return result;
-	                    }
-	                }
-	                return result;
-	            }
-	            var tilesNeedDelete = [];
-	            var i, tile;
-	            for (i = 0; i < this.children.length; i++) {
-	                tile = this.children[i];
-	                var checkResult = checkTileExist(visibleTileGrids, tile.tileInfo.level, tile.tileInfo.row, tile.tileInfo.column);
-	                var isExist = checkResult.isExist;
-	                if (isExist) {
-	                    visibleTileGrids.splice(checkResult.index, 1);
-	                }
-	                else {
-	                    tilesNeedDelete.push(tile);
-	                }
-	            }
-	            while (tilesNeedDelete.length > 0) {
-	                var b = this.remove(tilesNeedDelete[0]);
-	                tilesNeedDelete.splice(0, 1);
-	                if (!b) {
-	                    console.debug("subTiledLayer.remove(tilesNeedDelete[0])失败");
-	                }
-	            }
-	            if (bAddNew) {
-	                for (i = 0; i < visibleTileGrids.length; i++) {
-	                    var tileGridInfo = visibleTileGrids[i];
-	                    var args = {
-	                        level: tileGridInfo.level,
-	                        row: tileGridInfo.row,
-	                        column: tileGridInfo.column,
-	                        url: ""
-	                    };
-	                    args.url = this.tiledLayer.getTileUrl(args.level, args.row, args.column);
-	                    tile = Tile.getInstance(args.level, args.row, args.column, args.url);
-	                    this.add(tile);
-	                }
-	            }
-	        };
-	        SubTiledLayer.prototype.checkIfAllTilesLoaded = function () {
-	            for (var i = 0; i < this.children.length; i++) {
-	                var tile = this.children[i];
-	                if (tile) {
-	                    var isTileLoaded = tile.material.isReady();
-	                    if (!isTileLoaded) {
-	                        return false;
-	                    }
-	                }
-	            }
-	            return true;
-	        };
-	        SubTiledLayer.prototype.getExtent = function () {
-	            return Extent.union(this.getExtents());
-	        };
-	        SubTiledLayer.prototype.getExtents = function () {
-	            return this.children.map(function (item) { return item.getExtent(); });
-	        };
-	        SubTiledLayer.prototype.getShouldDrawTilesCount = function () {
-	            return this.visible ? this.children.filter(function (tile) {
-	                return tile.visible && tile.isReady();
-	            }).length : 0;
-	        };
-	        return SubTiledLayer;
-	    }(GraphicGroup));
-	    return SubTiledLayer;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 35 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(33), __webpack_require__(10), __webpack_require__(19), __webpack_require__(36), __webpack_require__(37), __webpack_require__(23), __webpack_require__(24), __webpack_require__(13)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Extent, MathUtils, MeshGraphic, TileMaterial, TileGeometry, Vertice, Triangle, TileGrid_1) {
-	    "use strict";
-	    var TileInfo = (function () {
-	        function TileInfo(level, row, column, url) {
-	            this.level = level;
-	            this.row = row;
-	            this.column = column;
-	            this.url = url;
-	            this.minLon = null;
-	            this.minLat = null;
-	            this.maxLon = null;
-	            this.maxLat = null;
-	            this.minX = null;
-	            this.minY = null;
-	            this.maxX = null;
-	            this.maxY = null;
-	            this.segment = 1;
-	            this._setTileInfo();
-	            this._handleGlobeTile();
-	            this.material = new TileMaterial(this.level, this.url);
-	        }
-	        TileInfo.prototype._setTileInfo = function () {
-	            var Egeo = MathUtils.getTileGeographicEnvelopByGrid(this.level, this.row, this.column);
-	            this.minLon = Egeo.minLon;
-	            this.minLat = Egeo.minLat;
-	            this.maxLon = Egeo.maxLon;
-	            this.maxLat = Egeo.maxLat;
-	            var minCoord = MathUtils.degreeGeographicToWebMercator(this.minLon, this.minLat);
-	            var maxCoord = MathUtils.degreeGeographicToWebMercator(this.maxLon, this.maxLat);
-	            this.minX = minCoord[0];
-	            this.minY = minCoord[1];
-	            this.maxX = maxCoord[0];
-	            this.maxY = maxCoord[1];
-	        };
-	        TileInfo.prototype._handleGlobeTile = function () {
-	            var BASE_LEVEL = Kernel.BASE_LEVEL;
-	            if (this.level < BASE_LEVEL) {
-	                var changeLevel = BASE_LEVEL - this.level;
-	                this.segment = Math.pow(2, changeLevel);
-	            }
-	            else {
-	                this.segment = 1;
-	            }
-	            this._handleTile();
-	        };
-	        TileInfo.prototype._handleTile = function () {
-	            this.visible = true;
-	            var verticeArray = [];
-	            var triangleArray = [];
-	            var vertices = [];
-	            var indices = [];
-	            var textureCoords = [];
-	            var deltaX = (this.maxX - this.minX) / this.segment;
-	            var deltaY = (this.maxY - this.minY) / this.segment;
-	            var deltaTextureCoord = 1.0 / this.segment;
-	            var changeElevation = 0;
-	            var levelDeltaR = 0;
-	            var mercatorXs = [];
-	            var mercatorYs = [];
-	            var textureSs = [];
-	            var textureTs = [];
-	            var i, j;
-	            for (i = 0; i <= this.segment; i++) {
-	                mercatorXs.push(this.minX + i * deltaX);
-	                mercatorYs.push(this.maxY - i * deltaY);
-	                var b = i * deltaTextureCoord;
-	                textureSs.push(b);
-	                textureTs.push(1 - b);
-	            }
-	            var index = 0;
-	            for (i = 0; i <= this.segment; i++) {
-	                for (j = 0; j <= this.segment; j++) {
-	                    var merX = mercatorXs[j];
-	                    var merY = mercatorYs[i];
-	                    var ele = 0;
-	                    var lonlat = MathUtils.webMercatorToDegreeGeographic(merX, merY);
-	                    var p = MathUtils.geographicToCartesianCoord(lonlat[0], lonlat[1], Kernel.EARTH_RADIUS + ele + levelDeltaR).getArray();
-	                    vertices = vertices.concat(p);
-	                    textureCoords = textureCoords.concat(textureSs[j], textureTs[i]);
-	                    var v = new Vertice({
-	                        p: p,
-	                        i: index,
-	                        uv: [textureSs[j], textureTs[i]]
-	                    });
-	                    verticeArray.push(v);
-	                    index++;
-	                }
-	            }
-	            for (i = 0; i < this.segment; i++) {
-	                for (j = 0; j < this.segment; j++) {
-	                    var idx0 = (this.segment + 1) * i + j;
-	                    var idx1 = (this.segment + 1) * (i + 1) + j;
-	                    var idx2 = idx1 + 1;
-	                    var idx3 = idx0 + 1;
-	                    indices = indices.concat(idx0, idx1, idx2);
-	                    indices = indices.concat(idx2, idx3, idx0);
-	                    var v0 = verticeArray[idx0];
-	                    var v1 = verticeArray[idx1];
-	                    var v2 = verticeArray[idx2];
-	                    var v3 = verticeArray[idx3];
-	                    var triangle1 = new Triangle(v0, v1, v2);
-	                    var triangle2 = new Triangle(v2, v3, v0);
-	                    triangleArray.push(triangle1, triangle2);
-	                }
-	            }
-	            this.geometry = new TileGeometry(verticeArray, triangleArray);
-	        };
-	        return TileInfo;
-	    }());
-	    var Tile = (function (_super) {
-	        __extends(Tile, _super);
-	        function Tile(geometry, material, tileInfo) {
-	            _super.call(this, geometry, material);
-	            this.geometry = geometry;
-	            this.material = material;
-	            this.tileInfo = tileInfo;
-	        }
-	        Tile.getInstance = function (level, row, column, url) {
-	            var tileInfo = new TileInfo(level, row, column, url);
-	            return new Tile(tileInfo.geometry, tileInfo.material, tileInfo);
-	        };
-	        Tile.prototype.updateShaderUniforms = function (camera) {
-	        };
-	        Tile.prototype.getExtent = function () {
-	            var tileInfo = this.tileInfo;
-	            var tileGrid = new TileGrid_1.default(tileInfo.level, tileInfo.row, tileInfo.column);
-	            return new Extent(this.tileInfo.minLon, this.tileInfo.minLat, this.tileInfo.maxLon, this.tileInfo.maxLat, tileGrid);
-	        };
-	        Tile.prototype.shouldDraw = function (camera) {
-	            return this.tileInfo.visible && _super.prototype.shouldDraw.call(this, camera);
-	        };
-	        Tile.prototype.destroy = function () {
-	            _super.prototype.destroy.call(this);
-	            this.subTiledLayer = null;
-	        };
-	        return Tile;
-	    }(MeshGraphic));
-	    return Tile;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 36 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(27), __webpack_require__(16)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial, ImageUtils) {
-	    "use strict";
-	    var TileMaterial = (function (_super) {
-	        __extends(TileMaterial, _super);
-	        function TileMaterial(level, imageOrUrl) {
-	            _super.call(this, imageOrUrl, true);
-	            this.level = level >= 0 ? level : 20;
-	        }
-	        TileMaterial.prototype.onLoad = function () {
-	            if (this.level <= ImageUtils.MAX_LEVEL) {
-	                ImageUtils.add(this.image.src, this.image);
-	            }
-	            _super.prototype.onLoad.call(this);
-	        };
-	        return TileMaterial;
-	    }(MeshTextureMaterial));
-	    return TileMaterial;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 37 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(25)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Mesh) {
-	    "use strict";
-	    var TileGeometry = (function (_super) {
-	        __extends(TileGeometry, _super);
-	        function TileGeometry(vertices, triangles) {
-	            _super.call(this);
-	            this.vertices = vertices;
-	            this.triangles = triangles;
-	        }
-	        return TileGeometry;
-	    }(Mesh));
-	    return TileGeometry;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 38 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(32)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
 	    "use strict";
 	    var OsmTiledLayer = (function (_super) {
 	        __extends(OsmTiledLayer, _super);
@@ -4648,7 +4759,7 @@
 
 
 /***/ },
-/* 39 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4656,7 +4767,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(10), __webpack_require__(32)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MathUtils, TiledLayer) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(9), __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MathUtils, TiledLayer) {
 	    "use strict";
 	    var BingTiledLayer = (function (_super) {
 	        __extends(BingTiledLayer, _super);
@@ -4707,7 +4818,7 @@
 
 
 /***/ },
-/* 40 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4715,7 +4826,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(32)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
 	    "use strict";
 	    var SosoTiledLayer = (function (_super) {
 	        __extends(SosoTiledLayer, _super);
