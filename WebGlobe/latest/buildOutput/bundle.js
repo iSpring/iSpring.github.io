@@ -116,13 +116,14 @@
 	    var Globe = (function () {
 	        function Globe(canvas) {
 	            this.REFRESH_INTERVAL = 100;
+	            this.lastRefreshTimestamp = -1;
 	            this.renderer = null;
 	            this.scene = null;
 	            this.camera = null;
 	            this.tiledLayer = null;
 	            this.labelLayer = null;
 	            this.poiLayer = null;
-	            this.cameraCore = null;
+	            this.lastRefreshCameraCore = null;
 	            this.eventHandler = null;
 	            Kernel.globe = this;
 	            this.renderer = new Renderer(canvas, this._onBeforeRender.bind(this));
@@ -191,11 +192,24 @@
 	            if (!this.tiledLayer || !this.scene || !this.camera) {
 	                return;
 	            }
+	            var timestamp = Date.now();
 	            this.camera.update(force);
 	            var newCameraCore = this.camera.getCameraCore();
-	            var isNeedRefresh = force || !newCameraCore.equals(this.cameraCore);
-	            this.cameraCore = newCameraCore;
+	            var isNeedRefresh = false;
+	            if (force) {
+	                isNeedRefresh = true;
+	            }
+	            else {
+	                if (newCameraCore.equals(this.lastRefreshCameraCore)) {
+	                    isNeedRefresh = false;
+	                }
+	                else {
+	                    isNeedRefresh = timestamp - this.lastRefreshTimestamp >= this.REFRESH_INTERVAL;
+	                }
+	            }
 	            if (isNeedRefresh) {
+	                this.lastRefreshTimestamp = timestamp;
+	                this.lastRefreshCameraCore = newCameraCore;
 	                this.tiledLayer.refresh();
 	            }
 	            this.tiledLayer.updateTileVisibility();
@@ -3145,7 +3159,7 @@
 	            if (this.idx === undefined) {
 	                this.idx = 1;
 	            }
-	            var url = "//wprd0" + this.idx + ".is.autonavi.com/appmaptile?x=" + column + "&y=" + row + "&z=" + level + "&lang=zh_cn&size=1&scl=1&style=8&type=11";
+	            var url = "http://wprd0" + this.idx + ".is.autonavi.com/appmaptile?x=" + column + "&y=" + row + "&z=" + level + "&lang=zh_cn&size=1&scl=1&style=8&type=11";
 	            this.idx++;
 	            if (this.idx >= 5) {
 	                this.idx = 1;
