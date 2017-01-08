@@ -115,7 +115,7 @@
 	    "use strict";
 	    var Globe = (function () {
 	        function Globe(canvas) {
-	            this.REFRESH_INTERVAL = 100;
+	            this.REFRESH_INTERVAL = 150;
 	            this.lastRefreshTimestamp = -1;
 	            this.renderer = null;
 	            this.scene = null;
@@ -125,6 +125,8 @@
 	            this.poiLayer = null;
 	            this.lastRefreshCameraCore = null;
 	            this.eventHandler = null;
+	            this.allRefreshCount = 0;
+	            this.realRefreshCount = 0;
 	            Kernel.globe = this;
 	            this.renderer = new Renderer(canvas, this._onBeforeRender.bind(this));
 	            this.scene = new Scene();
@@ -187,11 +189,15 @@
 	        Globe.prototype._onBeforeRender = function (renderer) {
 	            this.refresh();
 	        };
+	        Globe.prototype.logRefreshInfo = function () {
+	            console.log(this.realRefreshCount, this.allRefreshCount, this.realRefreshCount / this.allRefreshCount);
+	        };
 	        Globe.prototype.refresh = function (force) {
 	            if (force === void 0) { force = false; }
 	            if (!this.tiledLayer || !this.scene || !this.camera) {
 	                return;
 	            }
+	            this.allRefreshCount++;
 	            var timestamp = Date.now();
 	            this.camera.update(force);
 	            var newCameraCore = this.camera.getCameraCore();
@@ -208,6 +214,7 @@
 	                }
 	            }
 	            if (isNeedRefresh) {
+	                this.realRefreshCount++;
 	                this.lastRefreshTimestamp = timestamp;
 	                this.lastRefreshCameraCore = newCameraCore;
 	                this.tiledLayer.refresh();
