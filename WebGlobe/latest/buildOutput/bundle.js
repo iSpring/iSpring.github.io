@@ -175,16 +175,19 @@
 	        Globe.prototype.isAnimating = function () {
 	            return this.camera.isAnimating();
 	        };
-	        Globe.prototype.animateToLevel = function (level) {
+	        Globe.prototype.animateToLevel = function (level, cb) {
 	            if (!this.isAnimating()) {
 	                level = level > Kernel.MAX_LEVEL ? Kernel.MAX_LEVEL : level;
 	                if (level !== this.getLevel()) {
-	                    this.camera.animateToLevel(level);
+	                    this.camera.animateToLevel(level, cb);
 	                }
 	            }
 	        };
-	        Globe.prototype.animateIn = function () {
-	            this.animateToLevel(this.getLevel() + 1);
+	        Globe.prototype.animateOut = function (cb) {
+	            this.animateToLevel(this.getLevel() - 1, cb);
+	        };
+	        Globe.prototype.animateIn = function (cb) {
+	            this.animateToLevel(this.getLevel() + 1, cb);
 	        };
 	        Globe.prototype._onBeforeRender = function (renderer) {
 	            this.refresh();
@@ -795,7 +798,7 @@
 	        Camera.prototype.isAnimating = function () {
 	            return this.animating;
 	        };
-	        Camera.prototype.animateToLevel = function (newLevel) {
+	        Camera.prototype.animateToLevel = function (newLevel, cb) {
 	            var _this = this;
 	            if (this.isAnimating()) {
 	                return;
@@ -826,6 +829,9 @@
 	                    _this.animating = false;
 	                    _this.realLevel = newLevel;
 	                    _this.setLevel(newLevel);
+	                    if (cb) {
+	                        cb();
+	                    }
 	                }
 	                else {
 	                    _this.realLevel += deltaLevel;
@@ -2926,7 +2932,7 @@
 	            this.dragGeo = null;
 	            this.previousX = -1;
 	            this.previousY = -1;
-	            this.onMouseMoveListener = null;
+	            this.twoTouchDistance = -1;
 	            this.oldTime = -1;
 	            this.lastTime = -1;
 	            this.startTime = -1;
@@ -2938,18 +2944,18 @@
 	        EventHandler.prototype._bindEvents = function () {
 	            window.addEventListener("resize", this._initLayout.bind(this));
 	            if (Utils.isMobile()) {
-	                this.onMouseMoveListener = this._onTouchMove.bind(this);
 	                this.canvas.addEventListener("touchstart", this._onTouchStart.bind(this), false);
 	                this.canvas.addEventListener("touchend", this._onTouchEnd.bind(this), false);
+	                this.canvas.addEventListener("touchmove", this._onTouchMove.bind(this), false);
 	            }
 	            else {
-	                this.onMouseMoveListener = this._onMouseMove.bind(this);
-	                this.canvas.addEventListener("mousedown", this._onMouseDown.bind(this));
-	                this.canvas.addEventListener("mouseup", this._onMouseUp.bind(this));
-	                this.canvas.addEventListener("dblclick", this._onDbClick.bind(this));
-	                this.canvas.addEventListener("mousewheel", this._onMouseWheel.bind(this));
-	                this.canvas.addEventListener("DOMMouseScroll", this._onMouseWheel.bind(this));
-	                document.body.addEventListener("keydown", this._onKeyDown.bind(this));
+	                this.canvas.addEventListener("mousedown", this._onMouseDown.bind(this), false);
+	                this.canvas.addEventListener("mouseup", this._onMouseUp.bind(this), false);
+	                this.canvas.addEventListener("mousemove", this._onMouseMove.bind(this), false);
+	                this.canvas.addEventListener("dblclick", this._onDbClick.bind(this), false);
+	                this.canvas.addEventListener("mousewheel", this._onMouseWheel.bind(this), false);
+	                this.canvas.addEventListener("DOMMouseScroll", this._onMouseWheel.bind(this), false);
+	                document.body.addEventListener("keydown", this._onKeyDown.bind(this), false);
 	            }
 	        };
 	        EventHandler.prototype._initLayout = function () {
@@ -3031,60 +3037,20 @@
 	            var previousX = event.layerX || event.offsetX;
 	            var previousY = event.layerY || event.offsetY;
 	            this._handleMouseDownOrTouchStart(previousX, previousY);
-	            this.canvas.addEventListener("mousemove", this.onMouseMoveListener, false);
 	        };
 	        EventHandler.prototype._onMouseMove = function (event) {
+	            if (!this.down) {
+	                return;
+	            }
+	            if (Kernel.globe.isAnimating()) {
+	                return;
+	            }
 	            var currentX = event.layerX || event.offsetX;
 	            var currentY = event.layerY || event.offsetY;
 	            this._handleMouseMoveOrTouchMove(currentX, currentY);
 	        };
 	        EventHandler.prototype._onMouseUp = function () {
 	            this._handleMouseUpOrTouchEnd();
-	            if (this.canvas) {
-	                this.canvas.removeEventListener("mousemove", this.onMouseMoveListener, false);
-	            }
-	        };
-	        EventHandler.prototype._onTouchStart = function (event) {
-	            var globe = Kernel.globe;
-	            if (!globe || globe.isAnimating()) {
-	                return;
-	            }
-	            if (event.targetTouches.length === 0) {
-	                return;
-	            }
-	            var touch = event.targetTouches[0];
-	            var previousX = touch.pageX;
-	            var previousY = touch.pageY;
-	            this._handleMouseDownOrTouchStart(previousX, previousY);
-	            this.canvas.addEventListener("touchmove", this.onMouseMoveListener, false);
-	            this.startTime = Date.now();
-	        };
-	        EventHandler.prototype._onTouchMove = function (event) {
-	            if (event.targetTouches.length === 0) {
-	                return;
-	            }
-	            var touch = event.targetTouches[0];
-	            var currentX = touch.pageX;
-	            var currentY = touch.pageY;
-	            this._handleMouseMoveOrTouchMove(currentX, currentY);
-	        };
-	        EventHandler.prototype._onTouchEnd = function (event) {
-	            this._handleMouseUpOrTouchEnd();
-	            if (this.canvas) {
-	                this.canvas.removeEventListener("touchmove", this.onMouseMoveListener, false);
-	            }
-	            this.endTime = Date.now();
-	            var time = this.endTime - this.startTime;
-	            if (time <= 200) {
-	                var time2 = this.endTime - this.lastTime;
-	                if (time2 < 300) {
-	                    this.lastTime = this.oldTime;
-	                    Kernel.globe.zoomIn();
-	                }
-	                else {
-	                    this.lastTime = this.endTime;
-	                }
-	            }
 	        };
 	        EventHandler.prototype._onDbClick = function (event) {
 	            var globe = Kernel.globe;
@@ -3137,6 +3103,126 @@
 	            }
 	            else if (keyNum === 40) {
 	                camera.setDeltaPitch(-DELTA_PITCH);
+	            }
+	        };
+	        EventHandler.prototype._onTouchZero = function () {
+	            this.twoTouchDistance = -1;
+	            this._handleMouseUpOrTouchEnd();
+	            this.endTime = Date.now();
+	            var time = this.endTime - this.startTime;
+	            if (time <= 200) {
+	                var time2 = this.endTime - this.lastTime;
+	                if (time2 < 300) {
+	                    this.lastTime = this.oldTime;
+	                    Kernel.globe.zoomIn();
+	                }
+	                else {
+	                    this.lastTime = this.endTime;
+	                }
+	            }
+	        };
+	        EventHandler.prototype._onTouchOne = function (event) {
+	            this.twoTouchDistance = -1;
+	            var touch = event.targetTouches[0];
+	            var previousX = touch.pageX;
+	            var previousY = touch.pageY;
+	            this._handleMouseDownOrTouchStart(previousX, previousY);
+	            this.startTime = Date.now();
+	        };
+	        EventHandler.prototype._onTouchTwo = function (event) {
+	            this.down = true;
+	            this.previousX = -1;
+	            this.previousY = -1;
+	            this.dragGeo = null;
+	            var touch1 = event.targetTouches[0];
+	            var x1 = touch1.pageX;
+	            var y1 = touch1.pageY;
+	            var touch2 = event.targetTouches[1];
+	            var x2 = touch2.pageX;
+	            var y2 = touch2.pageY;
+	            this.twoTouchDistance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+	        };
+	        EventHandler.prototype._onTouchMulti = function () {
+	            this.down = true;
+	            this.previousX = -1;
+	            this.previousY = -1;
+	            this.dragGeo = null;
+	            this.twoTouchDistance = -1;
+	        };
+	        EventHandler.prototype._onTouchStart = function (event) {
+	            var globe = Kernel.globe;
+	            if (!globe || globe.isAnimating()) {
+	                return;
+	            }
+	            var touchCount = event.targetTouches.length;
+	            if (touchCount === 0) {
+	                this._onTouchZero();
+	            }
+	            else if (touchCount === 1) {
+	                this._onTouchOne(event);
+	            }
+	            else if (touchCount === 2) {
+	                this._onTouchTwo(event);
+	            }
+	            else {
+	                this._onTouchMulti();
+	            }
+	        };
+	        EventHandler.prototype._onTouchMoveOne = function (event) {
+	            var touch = event.targetTouches[0];
+	            var currentX = touch.pageX;
+	            var currentY = touch.pageY;
+	            this._handleMouseMoveOrTouchMove(currentX, currentY);
+	        };
+	        EventHandler.prototype._onTouchMoveTwo = function (event) {
+	            var _this = this;
+	            var touch1 = event.targetTouches[0];
+	            var x1 = touch1.pageX;
+	            var y1 = touch1.pageY;
+	            var touch2 = event.targetTouches[1];
+	            var x2 = touch2.pageX;
+	            var y2 = touch2.pageY;
+	            var twoTouchDistance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+	            var radio = twoTouchDistance / this.twoTouchDistance;
+	            if (radio >= 1.3) {
+	                Kernel.globe.animateIn(function () {
+	                    _this.twoTouchDistance = twoTouchDistance;
+	                });
+	            }
+	            else if (radio <= 0.7) {
+	                Kernel.globe.animateOut(function () {
+	                    _this.twoTouchDistance = twoTouchDistance;
+	                });
+	            }
+	        };
+	        EventHandler.prototype._onTouchMove = function (event) {
+	            if (!this.down) {
+	                return;
+	            }
+	            if (Kernel.globe.isAnimating()) {
+	                return;
+	            }
+	            var touchCount = event.targetTouches.length;
+	            if (touchCount === 1) {
+	                this._onTouchMoveOne(event);
+	            }
+	            else if (touchCount === 2) {
+	                this._onTouchMoveTwo(event);
+	            }
+	        };
+	        EventHandler.prototype._onTouchEnd = function (event) {
+	            var touchCount = event.targetTouches.length;
+	            if (touchCount === 0) {
+	                this._onTouchZero();
+	            }
+	            else if (touchCount === 1) {
+	                this._onTouchOne(event);
+	            }
+	            else if (touchCount === 2) {
+	                this._onTouchTwo(event);
+	            }
+	            else {
+	                this._onTouchMulti();
 	            }
 	        };
 	        return EventHandler;
