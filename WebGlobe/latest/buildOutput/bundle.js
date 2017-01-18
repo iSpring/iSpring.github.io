@@ -44,65 +44,12 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(1), __webpack_require__(38), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Globe, GoogleTiledLayer, OsmTiledLayer_1, BingTiledLayer, SosoTiledLayer) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(1)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Globe) {
 	    "use strict";
 	    (function () {
 	        var canvas = document.getElementById("canvasId");
 	        var globe = new Globe(canvas);
 	        window.globe = globe;
-	        var stylesObj = {
-	            google: ["Satellite", "Default"],
-	            osm: ["Default", "Cycle", "Transport", "Humanitarian"],
-	            bing: ["Default"],
-	            soso: ["Default"]
-	        };
-	        var mapSelector = document.getElementById("mapSelector");
-	        var styleSelector = document.getElementById("styleSelector");
-	        var handleStyleChange = true;
-	        styleSelector.onchange = function () {
-	            if (!handleStyleChange) {
-	                return;
-	            }
-	            var newTiledLayer = null;
-	            var mapType = mapSelector.value;
-	            var styleType = styleSelector.value;
-	            switch (mapType) {
-	                case "google":
-	                    newTiledLayer = new GoogleTiledLayer(styleType);
-	                    break;
-	                case "bing":
-	                    newTiledLayer = new BingTiledLayer(styleType);
-	                    break;
-	                case "osm":
-	                    newTiledLayer = new OsmTiledLayer_1.default(styleType);
-	                    break;
-	                case "soso":
-	                    newTiledLayer = new SosoTiledLayer(styleType);
-	                    break;
-	                default:
-	                    break;
-	            }
-	            if (newTiledLayer) {
-	                globe.setTiledLayer(newTiledLayer);
-	            }
-	        };
-	        mapSelector.onchange = function () {
-	            handleStyleChange = false;
-	            while (styleSelector.children.length > 0) {
-	                styleSelector.removeChild(styleSelector.children[0]);
-	            }
-	            var mapType = mapSelector.value;
-	            var styles = stylesObj[mapType];
-	            handleStyleChange = true;
-	            styles.forEach(function (style) {
-	                var option = document.createElement("option");
-	                option.setAttribute("value", style);
-	                option.innerHTML = style;
-	                styleSelector.appendChild(option);
-	            });
-	            styleSelector.onchange();
-	        };
-	        mapSelector.onchange();
 	    })();
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
@@ -111,10 +58,15 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(5), __webpack_require__(15), __webpack_require__(2), __webpack_require__(17), __webpack_require__(18), __webpack_require__(34), __webpack_require__(36)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Renderer, Camera_1, Scene, ImageUtils, EventHandler, AutonaviLabelLayer_1, Atmosphere, PoiLayer) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(5), __webpack_require__(6), __webpack_require__(15), __webpack_require__(2), __webpack_require__(17), __webpack_require__(18), __webpack_require__(34), __webpack_require__(36), __webpack_require__(38), __webpack_require__(40)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, Renderer, Camera_1, Scene, ImageUtils, EventHandler, GoogleTiledLayer, AutonaviLabelLayer_1, QihuTrafficLayer_1, Atmosphere, PoiLayer) {
 	    "use strict";
+	    var initLevel = Utils.isMobile() ? 8 : 0;
 	    var Globe = (function () {
-	        function Globe(canvas) {
+	        function Globe(canvas, level, lonlat) {
+	            var _this = this;
+	            if (level === void 0) { level = initLevel; }
+	            if (lonlat === void 0) { lonlat = [116.3975, 39.9085]; }
+	            this.canvas = canvas;
 	            this.REFRESH_INTERVAL = 150;
 	            this.lastRefreshTimestamp = -1;
 	            this.renderer = null;
@@ -122,6 +74,7 @@
 	            this.camera = null;
 	            this.tiledLayer = null;
 	            this.labelLayer = null;
+	            this.trafficLayer = null;
 	            this.poiLayer = null;
 	            this.lastRefreshCameraCore = null;
 	            this.eventHandler = null;
@@ -131,18 +84,33 @@
 	            this.renderer = new Renderer(canvas, this._onBeforeRender.bind(this));
 	            this.scene = new Scene();
 	            var radio = canvas.width / canvas.height;
-	            this.camera = new Camera_1.default(30, radio, 1, Kernel.EARTH_RADIUS * 2);
+	            this.camera = new Camera_1.default(30, radio, 1, Kernel.EARTH_RADIUS * 2, level, lonlat);
 	            this.renderer.setScene(this.scene);
 	            this.renderer.setCamera(this.camera);
-	            this.setLevel(0);
 	            this.labelLayer = new AutonaviLabelLayer_1.default();
 	            this.scene.add(this.labelLayer);
+	            this.trafficLayer = new QihuTrafficLayer_1.default();
+	            this.trafficLayer.visible = false;
+	            this.scene.add(this.trafficLayer);
 	            var atmosphere = Atmosphere.getInstance();
 	            this.scene.add(atmosphere);
 	            this.poiLayer = PoiLayer.getInstance();
 	            this.scene.add(this.poiLayer);
 	            this.renderer.setIfAutoRefresh(true);
 	            this.eventHandler = new EventHandler(canvas);
+	            var tiledLayer = new GoogleTiledLayer("Satellite");
+	            this.setTiledLayer(tiledLayer);
+	            if (Utils.isMobile() && window.navigator.geolocation) {
+	                window.navigator.geolocation.getCurrentPosition(function (position) {
+	                    var lon = position.coords.longitude;
+	                    var lat = position.coords.latitude;
+	                    _this.eventHandler.moveLonLatToCanvas(lon, lat, _this.canvas.width / 2, _this.canvas.height / 2);
+	                    var mobileLevel = 13;
+	                    if (_this.getLevel() < mobileLevel) {
+	                        _this.setLevel(mobileLevel);
+	                    }
+	                });
+	            }
 	        }
 	        Globe.prototype.setTiledLayer = function (tiledLayer) {
 	            ImageUtils.clear();
@@ -156,6 +124,26 @@
 	            this.tiledLayer = tiledLayer;
 	            this.scene.add(this.tiledLayer, true);
 	            this.refresh(true);
+	        };
+	        Globe.prototype.showLabelLayer = function () {
+	            if (this.labelLayer) {
+	                this.labelLayer.visible = true;
+	            }
+	        };
+	        Globe.prototype.hideLabelLayer = function () {
+	            if (this.labelLayer) {
+	                this.labelLayer.visible = false;
+	            }
+	        };
+	        Globe.prototype.showTrafficLayer = function () {
+	            if (this.trafficLayer) {
+	                this.trafficLayer.visible = true;
+	            }
+	        };
+	        Globe.prototype.hideTrafficLayer = function () {
+	            if (this.trafficLayer) {
+	                this.trafficLayer.visible = false;
+	            }
 	        };
 	        Globe.prototype.getLevel = function () {
 	            return this.camera ? this.camera.getLevel() : -1;
@@ -223,9 +211,16 @@
 	                this.tiledLayer.refresh();
 	            }
 	            this.tiledLayer.updateTileVisibility();
-	            if (this.labelLayer.visible) {
+	            var a = !!(this.labelLayer && this.labelLayer.visible);
+	            var b = !!(this.trafficLayer && this.trafficLayer.visible);
+	            if (a || b) {
 	                var lastLevelTileGrids = this.tiledLayer.getLastLevelVisibleTileGrids();
-	                this.labelLayer.updateTiles(this.getLastLevel(), lastLevelTileGrids);
+	                if (a) {
+	                    this.labelLayer.updateTiles(this.getLastLevel(), lastLevelTileGrids);
+	                }
+	                if (b) {
+	                    this.trafficLayer.updateTiles(this.getLastLevel(), lastLevelTileGrids);
+	                }
 	            }
 	        };
 	        Globe.prototype.getExtents = function (level) {
@@ -299,6 +294,137 @@
 
 /***/ },
 /* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	    "use strict";
+	    var Utils = (function () {
+	        function Utils() {
+	        }
+	        Utils.isNumber = function (v) {
+	            return typeof v === "number";
+	        };
+	        Utils.isInteger = function (v) {
+	            var isInt = false;
+	            var isNum = this.isNumber(v);
+	            if (isNum) {
+	                var numFloat = parseFloat(v);
+	                var numInt = parseInt(v);
+	                if (numFloat === numInt) {
+	                    isInt = true;
+	                }
+	                else {
+	                    isInt = false;
+	                }
+	            }
+	            else {
+	                isInt = false;
+	            }
+	            return isInt;
+	        };
+	        Utils.isPositive = function (v) {
+	            return v > 0;
+	        };
+	        Utils.isNegative = function (v) {
+	            return v < 0;
+	        };
+	        Utils.isNonNegative = function (v) {
+	            return v >= 0;
+	        };
+	        Utils.isNonPositive = function (v) {
+	            return v <= 0;
+	        };
+	        Utils.isPositiveInteger = function (v) {
+	            return this.isPositive(v) && this.isInteger(v);
+	        };
+	        Utils.isNonNegativeInteger = function (v) {
+	            return this.isNonNegative(v) && this.isInteger(v);
+	        };
+	        Utils.isArray = function (v) {
+	            return Object.prototype.toString.call(v) === '[object Array]';
+	        };
+	        Utils.isFunction = function (v) {
+	            return typeof v === 'function';
+	        };
+	        Utils.forEach = function (arr, func) {
+	            return this.isFunction(arr.forEach) ? arr.forEach(func) : Array.prototype.forEach.call(arr, func);
+	        };
+	        Utils.filter = function (arr, func) {
+	            return this.isFunction(arr.filter) ? arr.filter(func) : Array.prototype.filter.call(arr, func);
+	        };
+	        Utils.map = function (arr, func) {
+	            return this.isFunction(arr.map) ? arr.map(func) : Array.prototype.map.call(arr, func);
+	        };
+	        Utils.some = function (arr, func) {
+	            return this.isFunction(arr.some) ? arr.some(func) : Array.prototype.some.call(arr, func);
+	        };
+	        Utils.every = function (arr, func) {
+	            return this.isFunction(arr.every) ? arr.every(func) : Array.prototype.every.call(arr, func);
+	        };
+	        Utils.filterRepeatArray = function (arr) {
+	            var cloneArray = arr.map(function (item) {
+	                return item;
+	            });
+	            var simplifyArray = [];
+	            while (cloneArray.length > 0) {
+	                var e = cloneArray[0];
+	                var exist = simplifyArray.some(function (item) {
+	                    return e.equals(item);
+	                });
+	                if (!exist) {
+	                    simplifyArray.push(e);
+	                }
+	                cloneArray.splice(0, 1);
+	            }
+	            return simplifyArray;
+	        };
+	        Utils.jsonp = function (url, callback, callbackParameterName) {
+	            if (callbackParameterName === void 0) { callbackParameterName = "cb"; }
+	            var callbackName = "webglobe_callback_" + Math.random().toString().substring(2);
+	            if (url.indexOf('?') < 0) {
+	                url += '?';
+	            }
+	            else {
+	                url += '&';
+	            }
+	            url += callbackParameterName + "=window." + callbackName;
+	            var scriptElement = document.createElement("script");
+	            scriptElement.setAttribute("src", url);
+	            scriptElement.setAttribute("async", "true");
+	            document.body.appendChild(scriptElement);
+	            var canceled = false;
+	            window[callbackName] = function (response) {
+	                if (!canceled) {
+	                    callback(response);
+	                }
+	                delete window[callbackName];
+	                scriptElement.src = "";
+	                if (scriptElement.parentNode) {
+	                    scriptElement.parentNode.removeChild(scriptElement);
+	                }
+	            };
+	            return function () {
+	                canceled = true;
+	            };
+	        };
+	        Utils.isMobile = function () {
+	            return !!window.navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|IEMobile|Opera Mini/i);
+	        };
+	        Utils.wrapUrlWithProxy = function (url) {
+	            if (Kernel.proxy) {
+	                return Kernel.proxy + "?" + url;
+	            }
+	            return url;
+	        };
+	        return Utils;
+	    }());
+	    ;
+	    return Utils;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
@@ -385,7 +511,7 @@
 
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -393,7 +519,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(8), __webpack_require__(9), __webpack_require__(7), __webpack_require__(6), __webpack_require__(10), __webpack_require__(12), __webpack_require__(13), __webpack_require__(14)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vertice, Vector, Line, TileGrid_1, Matrix, Object3D) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(9), __webpack_require__(8), __webpack_require__(7), __webpack_require__(10), __webpack_require__(12), __webpack_require__(13), __webpack_require__(14)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vertice, Vector, Line, TileGrid_1, Matrix, Object3D) {
 	    "use strict";
 	    var CameraCore = (function () {
 	        function CameraCore(fov, aspect, near, far, realLevel, matrix) {
@@ -438,11 +564,13 @@
 	    exports.CameraCore = CameraCore;
 	    var Camera = (function (_super) {
 	        __extends(Camera, _super);
-	        function Camera(fov, aspect, near, far) {
+	        function Camera(fov, aspect, near, far, level, lonlat) {
 	            if (fov === void 0) { fov = 45; }
 	            if (aspect === void 0) { aspect = 1; }
 	            if (near === void 0) { near = 1; }
 	            if (far === void 0) { far = 100; }
+	            if (level === void 0) { level = 0; }
+	            if (lonlat === void 0) { lonlat = [0, 0]; }
 	            _super.call(this);
 	            this.fov = fov;
 	            this.aspect = aspect;
@@ -466,7 +594,8 @@
 	            this.lastMatrix.setUniqueValue(0);
 	            this.projMatrix = new Matrix();
 	            this._rawSetPerspectiveMatrix(this.fov, this.aspect, this.near, this.far);
-	            this._initCameraPosition();
+	            this._initCameraPosition(level, lonlat[0], lonlat[1]);
+	            this.update(true);
 	        }
 	        Camera.prototype.toJson = function () {
 	            function matrixToJson(mat) {
@@ -683,14 +812,14 @@
 	            this.level = level;
 	            this.realLevel = level;
 	        };
-	        Camera.prototype._initCameraPosition = function () {
-	            var initLevel = 0;
-	            var length = this._getTheoryDistanceFromCamera2EarthSurface(initLevel) + Kernel.EARTH_RADIUS;
+	        Camera.prototype._initCameraPosition = function (level, lon, lat) {
+	            var length = this._getTheoryDistanceFromCamera2EarthSurface(0) + Kernel.EARTH_RADIUS;
+	            var initPosition = MathUtils.geographicToCartesianCoord(lon, lat, length);
 	            var origin = new Vertice(0, 0, 0);
 	            var vector = this.getLightDirection().getOpposite();
 	            vector.setLength(length);
-	            var newPosition = vector.getVertice();
-	            this._look(newPosition, origin);
+	            this._look(initPosition, origin);
+	            this.setLevel(level);
 	        };
 	        Camera.prototype._updatePositionByLevel = function (level, cameraMatrix) {
 	            var globe = Kernel.globe;
@@ -1277,10 +1406,10 @@
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Vertice) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(8)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Vertice) {
 	    "use strict";
 	    var Vector = (function () {
 	        function Vector(x, y, z) {
@@ -1396,7 +1525,7 @@
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -1426,135 +1555,10 @@
 
 
 /***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
-	    "use strict";
-	    var Utils = (function () {
-	        function Utils() {
-	        }
-	        Utils.isNumber = function (v) {
-	            return typeof v === "number";
-	        };
-	        Utils.isInteger = function (v) {
-	            var isInt = false;
-	            var isNum = this.isNumber(v);
-	            if (isNum) {
-	                var numFloat = parseFloat(v);
-	                var numInt = parseInt(v);
-	                if (numFloat === numInt) {
-	                    isInt = true;
-	                }
-	                else {
-	                    isInt = false;
-	                }
-	            }
-	            else {
-	                isInt = false;
-	            }
-	            return isInt;
-	        };
-	        Utils.isPositive = function (v) {
-	            return v > 0;
-	        };
-	        Utils.isNegative = function (v) {
-	            return v < 0;
-	        };
-	        Utils.isNonNegative = function (v) {
-	            return v >= 0;
-	        };
-	        Utils.isNonPositive = function (v) {
-	            return v <= 0;
-	        };
-	        Utils.isPositiveInteger = function (v) {
-	            return this.isPositive(v) && this.isInteger(v);
-	        };
-	        Utils.isNonNegativeInteger = function (v) {
-	            return this.isNonNegative(v) && this.isInteger(v);
-	        };
-	        Utils.isArray = function (v) {
-	            return Object.prototype.toString.call(v) === '[object Array]';
-	        };
-	        Utils.isFunction = function (v) {
-	            return typeof v === 'function';
-	        };
-	        Utils.forEach = function (arr, func) {
-	            return this.isFunction(arr.forEach) ? arr.forEach(func) : Array.prototype.forEach.call(arr, func);
-	        };
-	        Utils.filter = function (arr, func) {
-	            return this.isFunction(arr.filter) ? arr.filter(func) : Array.prototype.filter.call(arr, func);
-	        };
-	        Utils.map = function (arr, func) {
-	            return this.isFunction(arr.map) ? arr.map(func) : Array.prototype.map.call(arr, func);
-	        };
-	        Utils.some = function (arr, func) {
-	            return this.isFunction(arr.some) ? arr.some(func) : Array.prototype.some.call(arr, func);
-	        };
-	        Utils.every = function (arr, func) {
-	            return this.isFunction(arr.every) ? arr.every(func) : Array.prototype.every.call(arr, func);
-	        };
-	        Utils.filterRepeatArray = function (arr) {
-	            var cloneArray = arr.map(function (item) {
-	                return item;
-	            });
-	            var simplifyArray = [];
-	            while (cloneArray.length > 0) {
-	                var e = cloneArray[0];
-	                var exist = simplifyArray.some(function (item) {
-	                    return e.equals(item);
-	                });
-	                if (!exist) {
-	                    simplifyArray.push(e);
-	                }
-	                cloneArray.splice(0, 1);
-	            }
-	            return simplifyArray;
-	        };
-	        Utils.jsonp = function (url, callback, callbackParameterName) {
-	            if (callbackParameterName === void 0) { callbackParameterName = "cb"; }
-	            var callbackName = "webglobe_callback_" + Math.random().toString().substring(2);
-	            if (url.indexOf('?') < 0) {
-	                url += '?';
-	            }
-	            else {
-	                url += '&';
-	            }
-	            url += callbackParameterName + "=window." + callbackName;
-	            var scriptElement = document.createElement("script");
-	            scriptElement.setAttribute("src", url);
-	            scriptElement.setAttribute("async", "true");
-	            document.body.appendChild(scriptElement);
-	            var canceled = false;
-	            window[callbackName] = function (response) {
-	                if (!canceled) {
-	                    callback(response);
-	                }
-	                delete window[callbackName];
-	                scriptElement.src = "";
-	                if (scriptElement.parentNode) {
-	                    scriptElement.parentNode.removeChild(scriptElement);
-	                }
-	            };
-	            return function () {
-	                canceled = true;
-	            };
-	        };
-	        Utils.isMobile = function () {
-	            return !!window.navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|IEMobile|Opera Mini/i);
-	        };
-	        return Utils;
-	    }());
-	    ;
-	    return Utils;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(8), __webpack_require__(7), __webpack_require__(6), __webpack_require__(10), __webpack_require__(11)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, Vertice, Vector, Line, Plan) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(8), __webpack_require__(7), __webpack_require__(10), __webpack_require__(11)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, Vertice, Vector, Line, Plan) {
 	    "use strict";
 	    if (!Math.log2) {
 	        Math.log2 = function (value) { return (Math.log(value) / Math.log(2)); };
@@ -2325,7 +2329,7 @@
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(8), __webpack_require__(7), __webpack_require__(6)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Vertice, Vector) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(8), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Vertice, Vector) {
 	    "use strict";
 	    var Matrix = (function () {
 	        function Matrix(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) {
@@ -2923,7 +2927,7 @@
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(8), __webpack_require__(9), __webpack_require__(6)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vector) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(9), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vector) {
 	    "use strict";
 	    var EventHandler = (function () {
 	        function EventHandler(canvas) {
@@ -2965,7 +2969,7 @@
 	                Kernel.globe.camera.setAspect(this.canvas.width / this.canvas.height);
 	            }
 	        };
-	        EventHandler.prototype._moveLonLatToCanvas = function (lon, lat, canvasX, canvasY) {
+	        EventHandler.prototype.moveLonLatToCanvas = function (lon, lat, canvasX, canvasY) {
 	            var pickResult = Kernel.globe.camera.getPickCartesianCoordInEarthByCanvas(canvasX, canvasY);
 	            if (pickResult.length > 0) {
 	                var newLonLat = MathUtils.cartesianCoordToGeographic(pickResult[0]);
@@ -3067,7 +3071,7 @@
 	                var lon = lonlat[0];
 	                var lat = lonlat[1];
 	                globe.setLevel(globe.getLevel() + 1);
-	                this._moveLonLatToCanvas(lon, lat, absoluteX, absoluteY);
+	                this.moveLonLatToCanvas(lon, lat, absoluteX, absoluteY);
 	            }
 	        };
 	        EventHandler.prototype._onMouseWheel = function (event) {
@@ -3240,29 +3244,35 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(19)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, LabelLayer_1) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(19)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
 	    "use strict";
-	    var AutonaviLabelLayer = (function (_super) {
-	        __extends(AutonaviLabelLayer, _super);
-	        function AutonaviLabelLayer() {
-	            _super.apply(this, arguments);
-	            this.idx = 1;
+	    var GoogleTiledLayer = (function (_super) {
+	        __extends(GoogleTiledLayer, _super);
+	        function GoogleTiledLayer(style) {
+	            if (style === void 0) { style = "Default"; }
+	            _super.call(this, style);
+	            this.idx = 0;
 	        }
-	        AutonaviLabelLayer.prototype.getTileUrl = function (level, row, column) {
+	        GoogleTiledLayer.prototype.getTileUrl = function (level, row, column) {
 	            if (this.idx === undefined) {
-	                this.idx = 1;
+	                this.idx = 0;
 	            }
-	            var url = "http://wprd0" + this.idx + ".is.autonavi.com/appmaptile?x=" + column + "&y=" + row + "&z=" + level + "&lang=zh_cn&size=1&scl=1&style=8&type=11";
+	            var url = "";
+	            if (this.style === "Satellite") {
+	                url = "//mt" + this.idx + ".google.cn/maps/vt?lyrs=s%40709&hl=zh-CN&gl=CN&&x=" + column + "&y=" + row + "&z=" + level;
+	            }
+	            else {
+	                url = "//mt" + this.idx + ".google.cn/vt/hl=zh-CN&gl=CN&x=" + column + "&y=" + row + "&z=" + level;
+	            }
 	            this.idx++;
-	            if (this.idx >= 5) {
-	                this.idx = 1;
+	            if (this.idx >= 4) {
+	                this.idx = 0;
 	            }
 	            return url;
 	        };
-	        return AutonaviLabelLayer;
-	    }(LabelLayer_1.default));
-	    Object.defineProperty(exports, "__esModule", { value: true });
-	    exports.default = AutonaviLabelLayer;
+	        return GoogleTiledLayer;
+	    }(TiledLayer));
+	    return GoogleTiledLayer;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -3275,23 +3285,135 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(20), __webpack_require__(33)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Tile, SubTiledLayer) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(3), __webpack_require__(20), __webpack_require__(21), __webpack_require__(16), __webpack_require__(33)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Kernel, Extent, Tile, GraphicGroup, SubTiledLayer) {
 	    "use strict";
-	    var LabelLayer = (function (_super) {
-	        __extends(LabelLayer, _super);
-	        function LabelLayer() {
-	            _super.call(this, -1);
-	            this.minLevel = 4;
+	    var TiledLayer = (function (_super) {
+	        __extends(TiledLayer, _super);
+	        function TiledLayer(style) {
+	            if (style === void 0) { style = ""; }
+	            _super.call(this);
+	            this.style = style;
+	            this.imageRequestOptimizeDeltaLevel = 2;
+	            var subLayer0 = new SubTiledLayer(0);
+	            this.add(subLayer0);
+	            var subLayer1 = new SubTiledLayer(1);
+	            this.add(subLayer1);
+	            for (var m = 0; m <= 1; m++) {
+	                for (var n = 0; n <= 1; n++) {
+	                    var args = {
+	                        level: 1,
+	                        row: m,
+	                        column: n,
+	                        url: ""
+	                    };
+	                    args.url = this.getTileUrl(args.level, args.row, args.column);
+	                    var tile = Tile.getInstance(args.level, args.row, args.column, args.url);
+	                    subLayer1.add(tile);
+	                }
+	            }
 	        }
-	        LabelLayer.prototype.onDraw = function (camera) {
+	        TiledLayer.prototype.refresh = function () {
+	            var globe = Kernel.globe;
+	            var camera = globe.camera;
+	            var currentLevel = globe.getLevel();
+	            var lastLevel = globe.getLastLevel();
+	            var options = {
+	                threshold: 1
+	            };
+	            var pitch = camera.getPitch();
+	            options.threshold = 1;
+	            var lastLevelTileGrids = camera.getVisibleTilesByLevel(lastLevel, options);
+	            this._updateSubLayerCount(lastLevel);
+	            var levelsTileGrids = [];
+	            var parentTileGrids = lastLevelTileGrids;
+	            var subLevel;
+	            for (subLevel = lastLevel; subLevel >= 2; subLevel--) {
+	                levelsTileGrids[subLevel] = parentTileGrids;
+	                parentTileGrids = parentTileGrids.map(function (item) {
+	                    return item.getParent();
+	                });
+	                parentTileGrids = Utils.filterRepeatArray(parentTileGrids);
+	            }
+	            for (subLevel = 2; subLevel <= lastLevel; subLevel++) {
+	                var addNew = lastLevel === subLevel || (lastLevel - subLevel) > this.imageRequestOptimizeDeltaLevel;
+	                this.children[subLevel].updateTiles(subLevel, levelsTileGrids[subLevel], addNew);
+	            }
+	        };
+	        TiledLayer.prototype._updateSubLayerCount = function (level) {
+	            var subLayerCount = this.children.length;
+	            var deltaLevel = level + 1 - subLayerCount;
+	            var i, subLayer;
+	            if (deltaLevel > 0) {
+	                for (i = 0; i < deltaLevel; i++) {
+	                    subLayer = new SubTiledLayer(i + subLayerCount);
+	                    this.add(subLayer);
+	                }
+	            }
+	            else if (deltaLevel < 0) {
+	                deltaLevel *= -1;
+	                for (i = 0; i < deltaLevel; i++) {
+	                    var removeLevel = this.children.length - 1;
+	                    if (removeLevel >= 2) {
+	                        subLayer = this.children[removeLevel];
+	                        this.remove(subLayer);
+	                    }
+	                    else {
+	                        break;
+	                    }
+	                }
+	            }
+	        };
+	        TiledLayer.prototype._getReadyTile = function (tileGrid) {
+	            var level = tileGrid.level;
+	            var row = tileGrid.row;
+	            var column = tileGrid.column;
+	            var tile = this.children[level].findTile(level, row, column);
+	            if (level === 1) {
+	                return tile;
+	            }
+	            else {
+	                if (tile && tile.isReady()) {
+	                    return tile;
+	                }
+	                else {
+	                    return this._getReadyTile(tileGrid.getParent());
+	                }
+	            }
+	        };
+	        TiledLayer.prototype.updateTileVisibility = function () {
+	            var _this = this;
+	            var globe = Kernel.globe;
+	            var currentLevel = globe.getLevel();
+	            var lastLevel = globe.getLastLevel();
+	            this.children.forEach(function (subTiledLayer) {
+	                subTiledLayer.showAllTiles();
+	            });
+	            var ancesorLevel = lastLevel - this.imageRequestOptimizeDeltaLevel - 1;
+	            if (ancesorLevel >= 1) {
+	                var camera = Kernel.globe.camera;
+	                var tileGrids = camera.getTileGridsOfBoundary(ancesorLevel, false);
+	                if (tileGrids.length === 8) {
+	                    tileGrids = Utils.filterRepeatArray(tileGrids);
+	                    for (var i = 0; i <= ancesorLevel; i++) {
+	                        this.children[i].hideAllTiles();
+	                    }
+	                    tileGrids.forEach(function (tileGrid) {
+	                        var tile = _this._getReadyTile(tileGrid);
+	                        if (tile) {
+	                            tile.setVisible(true);
+	                            tile.parent.visible = true;
+	                        }
+	                    });
+	                }
+	            }
+	        };
+	        TiledLayer.prototype.onDraw = function (camera) {
 	            var program = Tile.findProgram();
 	            if (!program) {
 	                return;
 	            }
 	            program.use();
 	            var gl = Kernel.gl;
-	            gl.enable(gl.BLEND);
-	            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	            var pmvMatrix = camera.getProjViewMatrixForDraw();
 	            var locPMVMatrix = program.getUniformLocation('uPMVMatrix');
 	            gl.uniformMatrix4fv(locPMVMatrix, false, pmvMatrix.getFloat32Array());
@@ -3301,17 +3423,48 @@
 	            gl.depthFunc(gl.ALWAYS);
 	            _super.prototype.onDraw.call(this, camera);
 	            gl.depthFunc(gl.LEQUAL);
-	            gl.disable(gl.BLEND);
 	        };
-	        LabelLayer.prototype.updateTiles = function (level, visibleTileGrids) {
-	            var _this = this;
-	            var validTileGrids = visibleTileGrids.filter(function (tileGrid) { return tileGrid.level >= _this.minLevel; });
-	            _super.prototype.updateTiles.call(this, level, validTileGrids, true);
+	        TiledLayer.prototype.getExtent = function (level) {
+	            var extents = this.getExtents(level);
+	            return Extent.union(extents);
 	        };
-	        return LabelLayer;
-	    }(SubTiledLayer));
-	    Object.defineProperty(exports, "__esModule", { value: true });
-	    exports.default = LabelLayer;
+	        TiledLayer.prototype.getExtents = function (level) {
+	            if (!(level >= 0 && level <= (this.children.length - 1))) {
+	                level = this.children.length - 1 - 3;
+	            }
+	            var subTiledLayer = this.children[level];
+	            if (subTiledLayer) {
+	                return subTiledLayer.getExtents();
+	            }
+	            return [];
+	        };
+	        TiledLayer.prototype.wrapUrlWithProxy = function (url) {
+	            return Utils.wrapUrlWithProxy(url);
+	        };
+	        TiledLayer.prototype.getLastLevelVisibleTileGrids = function () {
+	            var tileGrids = null;
+	            var subTiledLayer = this.children[this.children.length - 1];
+	            if (subTiledLayer) {
+	                tileGrids = subTiledLayer.getVisibleTileGrids();
+	            }
+	            return tileGrids;
+	        };
+	        TiledLayer.prototype.logVisibleTiles = function () {
+	            var result = [];
+	            this.children.forEach(function (subLayer) {
+	                var allCount = subLayer.children.length;
+	                var visibleCount = subLayer.getShouldDrawTilesCount();
+	                result.push({
+	                    level: subLayer.getLevel(),
+	                    allCount: allCount,
+	                    visibleCount: visibleCount
+	                });
+	            });
+	            console.table(result);
+	        };
+	        return TiledLayer;
+	    }(GraphicGroup));
+	    return TiledLayer;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -3319,12 +3472,53 @@
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
+	    "use strict";
+	    var Extent = (function () {
+	        function Extent(minLon, minLat, maxLon, maxLat, tileGrid) {
+	            this.minLon = minLon;
+	            this.minLat = minLat;
+	            this.maxLon = maxLon;
+	            this.maxLat = maxLat;
+	            this.tileGrid = tileGrid;
+	        }
+	        Extent.prototype.getMinLon = function () {
+	            return this.minLon;
+	        };
+	        Extent.prototype.getMinLat = function () {
+	            return this.minLat;
+	        };
+	        Extent.prototype.getMaxLon = function () {
+	            return this.maxLon;
+	        };
+	        Extent.prototype.getMaxLat = function () {
+	            return this.maxLat;
+	        };
+	        Extent.prototype.getTileGrid = function () {
+	            return this.tileGrid;
+	        };
+	        Extent.prototype.toJson = function () {
+	            return [this.minLon, this.minLat, this.maxLon, this.maxLat];
+	        };
+	        Extent.union = function (extents) {
+	            return null;
+	        };
+	        return Extent;
+	    }());
+	    return Extent;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(24), __webpack_require__(9), __webpack_require__(25), __webpack_require__(21), __webpack_require__(28), __webpack_require__(31), __webpack_require__(32), __webpack_require__(12)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Extent, MathUtils, MeshGraphic, TileMaterial, TileGeometry, Vertice, Triangle, TileGrid_1) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(20), __webpack_require__(9), __webpack_require__(25), __webpack_require__(22), __webpack_require__(28), __webpack_require__(31), __webpack_require__(32), __webpack_require__(12)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Extent, MathUtils, MeshGraphic, TileMaterial, TileGeometry, Vertice, Triangle, TileGrid_1) {
 	    "use strict";
 	    var TileInfo = (function () {
 	        function TileInfo(level, row, column, url) {
@@ -3466,7 +3660,7 @@
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3474,7 +3668,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(22), __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial, ImageUtils) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(23), __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial, ImageUtils) {
 	    "use strict";
 	    var TileMaterial = (function (_super) {
 	        __extends(TileMaterial, _super);
@@ -3495,7 +3689,7 @@
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3503,7 +3697,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(23), __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Material, ImageUtils) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(24), __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Material, ImageUtils) {
 	    "use strict";
 	    var MeshTextureMaterial = (function (_super) {
 	        __extends(MeshTextureMaterial, _super);
@@ -3591,7 +3785,7 @@
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -3602,47 +3796,6 @@
 	        return Material;
 	    }());
 	    return Material;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
-	    "use strict";
-	    var Extent = (function () {
-	        function Extent(minLon, minLat, maxLon, maxLat, tileGrid) {
-	            this.minLon = minLon;
-	            this.minLat = minLat;
-	            this.maxLon = maxLon;
-	            this.maxLat = maxLat;
-	            this.tileGrid = tileGrid;
-	        }
-	        Extent.prototype.getMinLon = function () {
-	            return this.minLon;
-	        };
-	        Extent.prototype.getMinLat = function () {
-	            return this.minLat;
-	        };
-	        Extent.prototype.getMaxLon = function () {
-	            return this.maxLon;
-	        };
-	        Extent.prototype.getMaxLat = function () {
-	            return this.maxLat;
-	        };
-	        Extent.prototype.getTileGrid = function () {
-	            return this.tileGrid;
-	        };
-	        Extent.prototype.toJson = function () {
-	            return [this.minLon, this.minLat, this.maxLon, this.maxLat];
-	        };
-	        Extent.union = function (extents) {
-	            return null;
-	        };
-	        return Extent;
-	    }());
-	    return Extent;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -4182,7 +4335,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(24), __webpack_require__(12), __webpack_require__(16), __webpack_require__(20)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Extent, TileGrid_1, GraphicGroup, Tile) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(20), __webpack_require__(12), __webpack_require__(16), __webpack_require__(21)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Extent, TileGrid_1, GraphicGroup, Tile) {
 	    "use strict";
 	    var SubTiledLayer = (function (_super) {
 	        __extends(SubTiledLayer, _super);
@@ -4328,7 +4481,143 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(25), __webpack_require__(35), __webpack_require__(22), __webpack_require__(6)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshGraphic, AtmosphereGeometry, MeshTextureMaterial, Vector) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(35)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, LabelLayer_1) {
+	    "use strict";
+	    var AutonaviLabelLayer = (function (_super) {
+	        __extends(AutonaviLabelLayer, _super);
+	        function AutonaviLabelLayer() {
+	            _super.apply(this, arguments);
+	            this.idx = 1;
+	        }
+	        AutonaviLabelLayer.prototype.getTileUrl = function (level, row, column) {
+	            if (this.idx === undefined) {
+	                this.idx = 1;
+	            }
+	            var url = "http://wprd0" + this.idx + ".is.autonavi.com/appmaptile?x=" + column + "&y=" + row + "&z=" + level + "&lang=zh_cn&size=1&scl=1&style=8&type=11";
+	            this.idx++;
+	            if (this.idx >= 5) {
+	                this.idx = 1;
+	            }
+	            return url;
+	        };
+	        return AutonaviLabelLayer;
+	    }(LabelLayer_1.default));
+	    Object.defineProperty(exports, "__esModule", { value: true });
+	    exports.default = AutonaviLabelLayer;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(21), __webpack_require__(33)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Tile, SubTiledLayer) {
+	    "use strict";
+	    var LabelLayer = (function (_super) {
+	        __extends(LabelLayer, _super);
+	        function LabelLayer() {
+	            _super.call(this, -1);
+	            this.minLevel = 4;
+	        }
+	        LabelLayer.prototype.onDraw = function (camera) {
+	            var program = Tile.findProgram();
+	            if (!program) {
+	                return;
+	            }
+	            program.use();
+	            var gl = Kernel.gl;
+	            gl.enable(gl.BLEND);
+	            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	            var pmvMatrix = camera.getProjViewMatrixForDraw();
+	            var locPMVMatrix = program.getUniformLocation('uPMVMatrix');
+	            gl.uniformMatrix4fv(locPMVMatrix, false, pmvMatrix.getFloat32Array());
+	            gl.activeTexture(gl.TEXTURE0);
+	            var locSampler = program.getUniformLocation('uSampler');
+	            gl.uniform1i(locSampler, 0);
+	            gl.depthFunc(gl.ALWAYS);
+	            _super.prototype.onDraw.call(this, camera);
+	            gl.depthFunc(gl.LEQUAL);
+	            gl.disable(gl.BLEND);
+	        };
+	        LabelLayer.prototype.updateTiles = function (level, visibleTileGrids) {
+	            var _this = this;
+	            var validTileGrids = visibleTileGrids.filter(function (tileGrid) { return tileGrid.level >= _this.minLevel; });
+	            _super.prototype.updateTiles.call(this, level, validTileGrids, true);
+	        };
+	        return LabelLayer;
+	    }(SubTiledLayer));
+	    Object.defineProperty(exports, "__esModule", { value: true });
+	    exports.default = LabelLayer;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(37)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TrafficLayer_1) {
+	    "use strict";
+	    var QihuTrafficLayer = (function (_super) {
+	        __extends(QihuTrafficLayer, _super);
+	        function QihuTrafficLayer() {
+	            _super.apply(this, arguments);
+	            this.minLevel = 8;
+	        }
+	        QihuTrafficLayer.prototype.getTileUrl = function (level, row, column) {
+	            row = Math.pow(2, level) - row - 1;
+	            var timestamp = Date.now();
+	            return "//qhapi.map.ishowchina.com/lkinfo/?act=tile&x=" + column + "&y=" + row + "&z=" + level + "&t=" + timestamp;
+	        };
+	        return QihuTrafficLayer;
+	    }(TrafficLayer_1.default));
+	    Object.defineProperty(exports, "__esModule", { value: true });
+	    exports.default = QihuTrafficLayer;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(35)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, LabelLayer_1) {
+	    "use strict";
+	    var TrafficLayer = (function (_super) {
+	        __extends(TrafficLayer, _super);
+	        function TrafficLayer() {
+	            _super.apply(this, arguments);
+	        }
+	        return TrafficLayer;
+	    }(LabelLayer_1.default));
+	    Object.defineProperty(exports, "__esModule", { value: true });
+	    exports.default = TrafficLayer;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(25), __webpack_require__(39), __webpack_require__(23), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshGraphic, AtmosphereGeometry, MeshTextureMaterial, Vector) {
 	    "use strict";
 	    var Atmosphere = (function (_super) {
 	        __extends(Atmosphere, _super);
@@ -4377,7 +4666,7 @@
 
 
 /***/ },
-/* 35 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4385,7 +4674,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(31), __webpack_require__(32), __webpack_require__(29), __webpack_require__(7), __webpack_require__(13)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshVertice, Triangle, Mesh, Vertice, Matrix) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(31), __webpack_require__(32), __webpack_require__(29), __webpack_require__(8), __webpack_require__(13)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshVertice, Triangle, Mesh, Vertice, Matrix) {
 	    "use strict";
 	    var Atmosphere = (function (_super) {
 	        __extends(Atmosphere, _super);
@@ -4443,7 +4732,7 @@
 
 
 /***/ },
-/* 36 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4451,7 +4740,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(8), __webpack_require__(9), __webpack_require__(26), __webpack_require__(27), __webpack_require__(37), __webpack_require__(30)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Program, Graphic, PoiMaterial, VertexBufferObject) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(9), __webpack_require__(26), __webpack_require__(27), __webpack_require__(41), __webpack_require__(30)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Program, Graphic, PoiMaterial, VertexBufferObject) {
 	    "use strict";
 	    var Poi = (function () {
 	        function Poi(x, y, z, uuid, name, address, phone) {
@@ -4536,7 +4825,7 @@
 	            this.clear();
 	            this.keyword = keyword;
 	            var globe = Kernel.globe;
-	            var level = globe.getLevel() + 3;
+	            var level = globe.getLastLevel();
 	            var extents = globe.getExtents(level);
 	            extents.forEach(function (extent) {
 	                PoiLayer.search(keyword, level, extent.getMinLon(), extent.getMinLat(), extent.getMaxLon(), extent.getMaxLat(), function (response) {
@@ -4557,7 +4846,7 @@
 
 
 /***/ },
-/* 37 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4565,7 +4854,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(22)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(23)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial) {
 	    "use strict";
 	    var PoiMaterial = (function (_super) {
 	        __extends(PoiMaterial, _super);
@@ -4577,406 +4866,6 @@
 	        return PoiMaterial;
 	    }(MeshTextureMaterial));
 	    return PoiMaterial;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 38 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
-	    "use strict";
-	    var GoogleTiledLayer = (function (_super) {
-	        __extends(GoogleTiledLayer, _super);
-	        function GoogleTiledLayer(style) {
-	            if (style === void 0) { style = "Default"; }
-	            _super.call(this, style);
-	            this.idx = 0;
-	        }
-	        GoogleTiledLayer.prototype.getTileUrl = function (level, row, column) {
-	            if (this.idx === undefined) {
-	                this.idx = 0;
-	            }
-	            var url = "";
-	            if (this.style === "Satellite") {
-	                url = "//mt" + this.idx + ".google.cn/maps/vt?lyrs=s%40709&hl=zh-CN&gl=CN&&x=" + column + "&y=" + row + "&z=" + level;
-	            }
-	            else {
-	                url = "//mt" + this.idx + ".google.cn/vt/hl=zh-CN&gl=CN&x=" + column + "&y=" + row + "&z=" + level;
-	            }
-	            this.idx++;
-	            if (this.idx >= 4) {
-	                this.idx = 0;
-	            }
-	            return url;
-	        };
-	        return GoogleTiledLayer;
-	    }(TiledLayer));
-	    return GoogleTiledLayer;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 39 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(8), __webpack_require__(3), __webpack_require__(24), __webpack_require__(20), __webpack_require__(16), __webpack_require__(33)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Kernel, Extent, Tile, GraphicGroup, SubTiledLayer) {
-	    "use strict";
-	    var TiledLayer = (function (_super) {
-	        __extends(TiledLayer, _super);
-	        function TiledLayer(style) {
-	            if (style === void 0) { style = ""; }
-	            _super.call(this);
-	            this.style = style;
-	            this.imageRequestOptimizeDeltaLevel = 2;
-	            var subLayer0 = new SubTiledLayer(0);
-	            this.add(subLayer0);
-	            var subLayer1 = new SubTiledLayer(1);
-	            this.add(subLayer1);
-	            for (var m = 0; m <= 1; m++) {
-	                for (var n = 0; n <= 1; n++) {
-	                    var args = {
-	                        level: 1,
-	                        row: m,
-	                        column: n,
-	                        url: ""
-	                    };
-	                    args.url = this.getTileUrl(args.level, args.row, args.column);
-	                    var tile = Tile.getInstance(args.level, args.row, args.column, args.url);
-	                    subLayer1.add(tile);
-	                }
-	            }
-	        }
-	        TiledLayer.prototype.refresh = function () {
-	            var globe = Kernel.globe;
-	            var camera = globe.camera;
-	            var currentLevel = globe.getLevel();
-	            var lastLevel = globe.getLastLevel();
-	            var options = {
-	                threshold: 1
-	            };
-	            var pitch = camera.getPitch();
-	            options.threshold = 1;
-	            var lastLevelTileGrids = camera.getVisibleTilesByLevel(lastLevel, options);
-	            this._updateSubLayerCount(lastLevel);
-	            var levelsTileGrids = [];
-	            var parentTileGrids = lastLevelTileGrids;
-	            var subLevel;
-	            for (subLevel = lastLevel; subLevel >= 2; subLevel--) {
-	                levelsTileGrids[subLevel] = parentTileGrids;
-	                parentTileGrids = parentTileGrids.map(function (item) {
-	                    return item.getParent();
-	                });
-	                parentTileGrids = Utils.filterRepeatArray(parentTileGrids);
-	            }
-	            for (subLevel = 2; subLevel <= lastLevel; subLevel++) {
-	                var addNew = lastLevel === subLevel || (lastLevel - subLevel) > this.imageRequestOptimizeDeltaLevel;
-	                this.children[subLevel].updateTiles(subLevel, levelsTileGrids[subLevel], addNew);
-	            }
-	        };
-	        TiledLayer.prototype._updateSubLayerCount = function (level) {
-	            var subLayerCount = this.children.length;
-	            var deltaLevel = level + 1 - subLayerCount;
-	            var i, subLayer;
-	            if (deltaLevel > 0) {
-	                for (i = 0; i < deltaLevel; i++) {
-	                    subLayer = new SubTiledLayer(i + subLayerCount);
-	                    this.add(subLayer);
-	                }
-	            }
-	            else if (deltaLevel < 0) {
-	                deltaLevel *= -1;
-	                for (i = 0; i < deltaLevel; i++) {
-	                    var removeLevel = this.children.length - 1;
-	                    if (removeLevel >= 2) {
-	                        subLayer = this.children[removeLevel];
-	                        this.remove(subLayer);
-	                    }
-	                    else {
-	                        break;
-	                    }
-	                }
-	            }
-	        };
-	        TiledLayer.prototype._getReadyTile = function (tileGrid) {
-	            var level = tileGrid.level;
-	            var row = tileGrid.row;
-	            var column = tileGrid.column;
-	            var tile = this.children[level].findTile(level, row, column);
-	            if (level === 1) {
-	                return tile;
-	            }
-	            else {
-	                if (tile && tile.isReady()) {
-	                    return tile;
-	                }
-	                else {
-	                    return this._getReadyTile(tileGrid.getParent());
-	                }
-	            }
-	        };
-	        TiledLayer.prototype.updateTileVisibility = function () {
-	            var _this = this;
-	            var globe = Kernel.globe;
-	            var currentLevel = globe.getLevel();
-	            var lastLevel = globe.getLastLevel();
-	            this.children.forEach(function (subTiledLayer) {
-	                subTiledLayer.showAllTiles();
-	            });
-	            var ancesorLevel = lastLevel - this.imageRequestOptimizeDeltaLevel - 1;
-	            if (ancesorLevel >= 1) {
-	                var camera = Kernel.globe.camera;
-	                var tileGrids = camera.getTileGridsOfBoundary(ancesorLevel, false);
-	                if (tileGrids.length === 8) {
-	                    tileGrids = Utils.filterRepeatArray(tileGrids);
-	                    for (var i = 0; i <= ancesorLevel; i++) {
-	                        this.children[i].hideAllTiles();
-	                    }
-	                    tileGrids.forEach(function (tileGrid) {
-	                        var tile = _this._getReadyTile(tileGrid);
-	                        if (tile) {
-	                            tile.setVisible(true);
-	                            tile.parent.visible = true;
-	                        }
-	                    });
-	                }
-	            }
-	        };
-	        TiledLayer.prototype.onDraw = function (camera) {
-	            var program = Tile.findProgram();
-	            if (!program) {
-	                return;
-	            }
-	            program.use();
-	            var gl = Kernel.gl;
-	            var pmvMatrix = camera.getProjViewMatrixForDraw();
-	            var locPMVMatrix = program.getUniformLocation('uPMVMatrix');
-	            gl.uniformMatrix4fv(locPMVMatrix, false, pmvMatrix.getFloat32Array());
-	            gl.activeTexture(gl.TEXTURE0);
-	            var locSampler = program.getUniformLocation('uSampler');
-	            gl.uniform1i(locSampler, 0);
-	            gl.depthFunc(gl.ALWAYS);
-	            _super.prototype.onDraw.call(this, camera);
-	            gl.depthFunc(gl.LEQUAL);
-	        };
-	        TiledLayer.prototype.getExtent = function (level) {
-	            var extents = this.getExtents(level);
-	            return Extent.union(extents);
-	        };
-	        TiledLayer.prototype.getExtents = function (level) {
-	            if (!(level >= 0 && level <= (this.children.length - 1))) {
-	                level = this.children.length - 1 - 3;
-	            }
-	            var subTiledLayer = this.children[level];
-	            if (subTiledLayer) {
-	                return subTiledLayer.getExtents();
-	            }
-	            return [];
-	        };
-	        TiledLayer.prototype.wrapUrlWithProxy = function (url) {
-	            if (Kernel.proxy) {
-	                return Kernel.proxy + "?" + url;
-	            }
-	            return url;
-	        };
-	        TiledLayer.prototype.getLastLevelVisibleTileGrids = function () {
-	            var tileGrids = null;
-	            var subTiledLayer = this.children[this.children.length - 1];
-	            if (subTiledLayer) {
-	                tileGrids = subTiledLayer.getVisibleTileGrids();
-	            }
-	            return tileGrids;
-	        };
-	        TiledLayer.prototype.logVisibleTiles = function () {
-	            var result = [];
-	            this.children.forEach(function (subLayer) {
-	                var allCount = subLayer.children.length;
-	                var visibleCount = subLayer.getShouldDrawTilesCount();
-	                result.push({
-	                    level: subLayer.getLevel(),
-	                    allCount: allCount,
-	                    visibleCount: visibleCount
-	                });
-	            });
-	            console.table(result);
-	        };
-	        return TiledLayer;
-	    }(GraphicGroup));
-	    return TiledLayer;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
-	    "use strict";
-	    var OsmTiledLayer = (function (_super) {
-	        __extends(OsmTiledLayer, _super);
-	        function OsmTiledLayer(style) {
-	            if (style === void 0) { style = "Default"; }
-	            _super.call(this, style);
-	            this.idx = 0;
-	        }
-	        OsmTiledLayer.prototype.getTileUrl = function (level, row, column) {
-	            if (this.idx === undefined) {
-	                this.idx = 0;
-	            }
-	            var url = '';
-	            var server = ["a", "b", "c"][this.idx];
-	            if (this.style === "Cycle") {
-	                url = "//" + server + ".tile.thunderforest.com/cycle/" + level + "/" + column + "/" + row + ".png";
-	            }
-	            else if (this.style === "Transport") {
-	                url = "//" + server + ".tile.thunderforest.com/transport/" + level + "/" + column + "/" + row + ".png";
-	            }
-	            else if (this.style === "Humanitarian") {
-	                url = "//tile-" + server + ".openstreetmap.fr/hot/" + level + "/" + column + "/" + row + ".png";
-	            }
-	            else {
-	                url = "//" + server + ".tile.openstreetmap.org/" + level + "/" + column + "/" + row + ".png";
-	            }
-	            this.idx++;
-	            if (this.idx >= 3) {
-	                this.idx = 0;
-	            }
-	            return url;
-	        };
-	        return OsmTiledLayer;
-	    }(TiledLayer));
-	    Object.defineProperty(exports, "__esModule", { value: true });
-	    exports.default = OsmTiledLayer;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 41 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(9), __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MathUtils, TiledLayer) {
-	    "use strict";
-	    var BingTiledLayer = (function (_super) {
-	        __extends(BingTiledLayer, _super);
-	        function BingTiledLayer() {
-	            _super.apply(this, arguments);
-	        }
-	        BingTiledLayer.prototype.getTileUrl = function (level, row, column) {
-	            var url = "";
-	            var tileX = column;
-	            var tileY = row;
-	            var strTileX2 = MathUtils.numerationSystemFrom10(2, tileX);
-	            var strTileY2 = MathUtils.numerationSystemFrom10(2, tileY);
-	            var delta = strTileX2.length - strTileY2.length;
-	            var i;
-	            if (delta > 0) {
-	                for (i = 0; i < delta; i++) {
-	                    strTileY2 = '0' + strTileY2;
-	                }
-	            }
-	            else if (delta < 0) {
-	                delta = -delta;
-	                for (i = 0; i < delta; i++) {
-	                    strTileX2 = '0' + strTileX2;
-	                }
-	            }
-	            var strMerge2 = "";
-	            for (i = 0; i < strTileY2.length; i++) {
-	                var charY = strTileY2[i];
-	                var charX = strTileX2[i];
-	                strMerge2 += charY + charX;
-	            }
-	            var strMerge4 = MathUtils.numerationSystemChange(2, 4, strMerge2);
-	            if (strMerge4.length < level) {
-	                delta = level - strMerge4.length;
-	                for (i = 0; i < delta; i++) {
-	                    strMerge4 = '0' + strMerge4;
-	                }
-	            }
-	            var sum = level + row + column;
-	            var serverIdx = sum % 8;
-	            url = "//ecn.t" + serverIdx + ".tiles.virtualearth.net/tiles/a" + strMerge4 + ".jpeg?g=1239&mkt=en-us";
-	            return url;
-	        };
-	        return BingTiledLayer;
-	    }(TiledLayer));
-	    return BingTiledLayer;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 42 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
-	    "use strict";
-	    var SosoTiledLayer = (function (_super) {
-	        __extends(SosoTiledLayer, _super);
-	        function SosoTiledLayer() {
-	            _super.apply(this, arguments);
-	        }
-	        SosoTiledLayer.prototype.getTileUrl = function (level, row, column) {
-	            if (level >= 10) {
-	                return this._getPoliticalUrl(level, row, column);
-	            }
-	            return this._getImageUrl(level, row, column);
-	        };
-	        SosoTiledLayer.prototype._getDemUrl = function (level, row, column) {
-	            var tileCount = Math.pow(2, level);
-	            var a = column;
-	            var b = tileCount - row - 1;
-	            var A = Math.floor(a / 16);
-	            var B = Math.floor(b / 16);
-	            var sum = level + row + column;
-	            var serverIdx = sum % 4;
-	            var url = "//p" + serverIdx + ".map.gtimg.com/demTiles/" + level + "/" + A + "/" + B + "/" + a + "_" + b + ".jpg";
-	            return url;
-	        };
-	        SosoTiledLayer.prototype._getImageUrl = function (level, row, column) {
-	            var tileCount = Math.pow(2, level);
-	            var a = column;
-	            var b = tileCount - row - 1;
-	            var A = Math.floor(a / 16);
-	            var B = Math.floor(b / 16);
-	            var sum = level + row + column;
-	            var serverIdx = sum % 4;
-	            var url = "//p" + serverIdx + ".map.gtimg.com/sateTiles/" + level + "/" + A + "/" + B + "/" + a + "_" + b + ".jpg?version=101";
-	            return url;
-	        };
-	        SosoTiledLayer.prototype._getPoliticalUrl = function (level, row, column) {
-	            row = Math.pow(2, level) - row - 1;
-	            var index = (level + row + column) % 4;
-	            var url = "//rt" + index + ".map.gtimg.com/tile?z=" + level + "&x=" + column + "&y=" + row + "&type=vector&styleid=3&version=112";
-	            return this.wrapUrlWithProxy(url);
-	        };
-	        return SosoTiledLayer;
-	    }(TiledLayer));
-	    return SosoTiledLayer;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
