@@ -104,6 +104,7 @@
 	                window.navigator.geolocation.getCurrentPosition(function (position) {
 	                    var lon = position.coords.longitude;
 	                    var lat = position.coords.latitude;
+	                    _this.poiLayer.addPoi(lon, lat, "", "", "", "");
 	                    _this.eventHandler.moveLonLatToCanvas(lon, lat, _this.canvas.width / 2, _this.canvas.height / 2);
 	                    var mobileLevel = 13;
 	                    if (_this.getLevel() < mobileLevel) {
@@ -4766,7 +4767,6 @@
 	            this.vbo = null;
 	            this.pois = [];
 	            this.vbo = new VertexBufferObject(Kernel.gl.ARRAY_BUFFER);
-	            this._addPoi(116.408540, 39.902350, "3161565500563468633", "首都大酒店", "北京市东城区前门东大街3号", "");
 	        }
 	        PoiLayer.getInstance = function () {
 	            var url = "/WebGlobe/src/world/images/poi.png";
@@ -4813,6 +4813,9 @@
 	            var poi = new Poi(p.x, p.y, p.z, uuid, name, address, phone);
 	            this.pois.push(poi);
 	            return poi;
+	        };
+	        PoiLayer.prototype.addPoi = function (lon, lat, uuid, name, address, phone) {
+	            return this._addPoi(lon, lat, uuid, name, address, phone);
 	        };
 	        PoiLayer.search = function (wd, level, minLon, minLat, maxLon, maxLat, callback, pageCapacity, pageIndex) {
 	            if (pageCapacity === void 0) { pageCapacity = 50; }
