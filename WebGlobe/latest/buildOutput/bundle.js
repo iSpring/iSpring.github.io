@@ -58,7 +58,7 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(5), __webpack_require__(6), __webpack_require__(15), __webpack_require__(2), __webpack_require__(17), __webpack_require__(18), __webpack_require__(34), __webpack_require__(36), __webpack_require__(38), __webpack_require__(40)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, Renderer, Camera_1, Scene, ImageUtils, EventHandler, GoogleTiledLayer, AutonaviLabelLayer_1, QihuTrafficLayer_1, Atmosphere, PoiLayer) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(5), __webpack_require__(6), __webpack_require__(7), __webpack_require__(8), __webpack_require__(2), __webpack_require__(17), __webpack_require__(18), __webpack_require__(19), __webpack_require__(36), __webpack_require__(37), __webpack_require__(39)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, LocationService_1, Renderer, Camera_1, Scene, ImageUtils, EventHandler, Google_1, Autonavi_1, Atmosphere, PoiLayer) {
 	    "use strict";
 	    var initLevel = Utils.isMobile() ? 8 : 0;
 	    var Globe = (function () {
@@ -87,32 +87,45 @@
 	            this.camera = new Camera_1.default(30, radio, 1, Kernel.EARTH_RADIUS * 2, level, lonlat);
 	            this.renderer.setScene(this.scene);
 	            this.renderer.setCamera(this.camera);
-	            this.labelLayer = new AutonaviLabelLayer_1.default();
+	            this.labelLayer = new Autonavi_1.AutonaviLabelLayer();
 	            this.scene.add(this.labelLayer);
-	            this.trafficLayer = new QihuTrafficLayer_1.default();
-	            this.trafficLayer.visible = false;
-	            this.scene.add(this.trafficLayer);
 	            var atmosphere = Atmosphere.getInstance();
 	            this.scene.add(atmosphere);
 	            this.poiLayer = PoiLayer.getInstance();
 	            this.scene.add(this.poiLayer);
 	            this.renderer.setIfAutoRefresh(true);
 	            this.eventHandler = new EventHandler(canvas);
-	            var tiledLayer = new GoogleTiledLayer("Satellite");
+	            var tiledLayer = new Google_1.GoogleTiledLayer("Satellite");
 	            this.setTiledLayer(tiledLayer);
-	            if (Utils.isMobile() && window.navigator.geolocation) {
-	                window.navigator.geolocation.getCurrentPosition(function (position) {
-	                    var lon = position.coords.longitude;
-	                    var lat = position.coords.latitude;
-	                    _this.poiLayer.addPoi(lon, lat, "", "", "", "");
-	                    _this.eventHandler.moveLonLatToCanvas(lon, lat, _this.canvas.width / 2, _this.canvas.height / 2);
-	                    var mobileLevel = 13;
-	                    if (_this.getLevel() < mobileLevel) {
-	                        _this.setLevel(mobileLevel);
-	                    }
+	            if (Utils.isMobile()) {
+	                Utils.subscribe('location', function (data) {
+	                    console.log(data);
+	                    _this.showLocation(data);
 	                });
+	                LocationService_1.default.getRobustLocation();
+	                LocationService_1.default.getLocation();
+	                LocationService_1.default.watchPosition();
 	            }
 	        }
+	        Globe.prototype.showLocation = function (locationData) {
+	            var lon = locationData.lng;
+	            var lat = locationData.lat;
+	            this.poiLayer.clear();
+	            this.poiLayer.addPoi(lon, lat, "", "", "", "");
+	            this.eventHandler.moveLonLatToCanvas(lon, lat, this.canvas.width / 2, this.canvas.height / 2);
+	            var accuracy = locationData.accuracy;
+	            var level = 8;
+	            if (accuracy <= 100) {
+	                level = 13;
+	            }
+	            else if (accuracy <= 1000) {
+	                level = 10;
+	            }
+	            else {
+	                level = 8;
+	            }
+	            this.setLevel(level);
+	        };
 	        Globe.prototype.setTiledLayer = function (tiledLayer) {
 	            ImageUtils.clear();
 	            if (this.tiledLayer) {
@@ -205,6 +218,7 @@
 	                    isNeedRefresh = timestamp - this.lastRefreshTimestamp >= this.REFRESH_INTERVAL;
 	                }
 	            }
+	            this.tiledLayer.updateSubLayerCount();
 	            if (isNeedRefresh) {
 	                this.realRefreshCount++;
 	                this.lastRefreshTimestamp = timestamp;
@@ -237,34 +251,21 @@
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, GraphicGroup) {
 	    "use strict";
-	    var ImageUtils = {
-	        MAX_LEVEL: 4,
-	        images: {},
-	        add: function (url, img) {
-	            this.images[url] = img;
-	        },
-	        get: function (url) {
-	            return this.images[url];
-	        },
-	        remove: function (url) {
-	            delete this.images[url];
-	        },
-	        clear: function () {
-	            this.images = {};
-	        },
-	        getCount: function () {
-	            var count = 0;
-	            for (var url in this.images) {
-	                if (this.images.hasOwnProperty(url)) {
-	                    count++;
-	                }
-	            }
-	            return count;
+	    var Scene = (function (_super) {
+	        __extends(Scene, _super);
+	        function Scene() {
+	            _super.apply(this, arguments);
 	        }
-	    };
-	    return ImageUtils;
+	        return Scene;
+	    }(GraphicGroup));
+	    return Scene;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -272,24 +273,78 @@
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
-	    var radius = 500;
-	    var maxProjectedCoord = Math.PI * radius;
-	    var Kernel = {
-	        gl: null,
-	        canvas: null,
-	        globe: null,
-	        idCounter: 0,
-	        BASE_LEVEL: 6,
-	        MAX_LEVEL: 15,
-	        EARTH_RADIUS: radius,
-	        MAX_PROJECTED_COORD: maxProjectedCoord,
-	        EARTH_FULL_OVERLAP_SCREEN_LEVEL: 3,
-	        DELTA_LEVEL_BETWEEN_LAST_LEVEL_AND_CURRENT_LEVEL: 3,
-	        proxy: ""
-	    };
-	    return Kernel;
+	    var GraphicGroup = (function () {
+	        function GraphicGroup() {
+	            this.visible = true;
+	            this.id = ++Kernel.idCounter;
+	            this.children = [];
+	        }
+	        GraphicGroup.prototype.add = function (g, first) {
+	            if (first === void 0) { first = false; }
+	            if (first) {
+	                this.children.unshift(g);
+	            }
+	            else {
+	                this.children.push(g);
+	            }
+	            g.parent = this;
+	        };
+	        GraphicGroup.prototype.remove = function (g) {
+	            var result = false;
+	            var findResult = this.findGraphicById(g.id);
+	            if (findResult) {
+	                g.destroy();
+	                this.children.splice(findResult.index, 1);
+	                g = null;
+	                result = true;
+	            }
+	            return result;
+	        };
+	        GraphicGroup.prototype.clear = function () {
+	            var i = 0, length = this.children.length, g = null;
+	            for (; i < length; i++) {
+	                g = this.children[i];
+	                g.destroy();
+	            }
+	            this.children = [];
+	        };
+	        GraphicGroup.prototype.destroy = function () {
+	            this.parent = null;
+	            this.clear();
+	        };
+	        GraphicGroup.prototype.findGraphicById = function (graphicId) {
+	            var i = 0, length = this.children.length, g = null;
+	            for (; i < length; i++) {
+	                g = this.children[i];
+	                if (g.id === graphicId) {
+	                    return {
+	                        index: i,
+	                        graphic: g
+	                    };
+	                }
+	            }
+	            return null;
+	        };
+	        GraphicGroup.prototype.shouldDraw = function () {
+	            return this.visible && this.children.length > 0;
+	        };
+	        GraphicGroup.prototype.draw = function (camera) {
+	            if (this.shouldDraw()) {
+	                this.onDraw(camera);
+	            }
+	        };
+	        GraphicGroup.prototype.onDraw = function (camera) {
+	            this.children.forEach(function (g) {
+	                if (g.shouldDraw(camera)) {
+	                    g.draw(camera);
+	                }
+	            });
+	        };
+	        return GraphicGroup;
+	    }());
+	    return GraphicGroup;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -297,8 +352,41 @@
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
 	    "use strict";
+	    var EARTH_RADIUS = 500;
+	    var MAX_PROJECTED_COORD = Math.PI * EARTH_RADIUS;
+	    var MAX_LAST_LEVEL = 18;
+	    var DELTA_LEVEL_BETWEEN_LAST_LEVEL_AND_CURRENT_LEVEL = 4;
+	    var MAX_LEVEL = MAX_LAST_LEVEL - DELTA_LEVEL_BETWEEN_LAST_LEVEL_AND_CURRENT_LEVEL;
+	    var Kernel = (function () {
+	        function Kernel() {
+	        }
+	        Kernel.gl = null;
+	        Kernel.canvas = null;
+	        Kernel.globe = null;
+	        Kernel.idCounter = 0;
+	        Kernel.EARTH_RADIUS = EARTH_RADIUS;
+	        Kernel.MAX_PROJECTED_COORD = MAX_PROJECTED_COORD;
+	        Kernel.BASE_LEVEL = 6;
+	        Kernel.MAX_LEVEL = MAX_LEVEL;
+	        Kernel.MAX_LAST_LEVEL = MAX_LAST_LEVEL;
+	        Kernel.EARTH_FULL_OVERLAP_SCREEN_LEVEL = 3;
+	        Kernel.DELTA_LEVEL_BETWEEN_LAST_LEVEL_AND_CURRENT_LEVEL = DELTA_LEVEL_BETWEEN_LAST_LEVEL_AND_CURRENT_LEVEL;
+	        Kernel.proxy = "";
+	        return Kernel;
+	    }());
+	    return Kernel;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	    "use strict";
+	    var topic = {};
 	    var Utils = (function () {
 	        function Utils() {
 	        }
@@ -417,6 +505,20 @@
 	            }
 	            return url;
 	        };
+	        Utils.subscribe = function (topicName, callback) {
+	            if (!topic[topicName]) {
+	                topic[topicName] = [];
+	            }
+	            topic[topicName].push(callback);
+	        };
+	        Utils.publish = function (topicName, data) {
+	            var callbacks = topic[topicName];
+	            if (callbacks && callbacks.length > 0) {
+	                callbacks.forEach(function (callback) {
+	                    callback(data);
+	                });
+	            }
+	        };
 	        return Utils;
 	    }());
 	    ;
@@ -425,10 +527,62 @@
 
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils) {
+	    "use strict";
+	    var LocationData = (function () {
+	        function LocationData() {
+	        }
+	        return LocationData;
+	    }());
+	    exports.LocationData = LocationData;
+	    var targetOrigin = 'https://apis.map.qq.com';
+	    var iframe = document.createElement("iframe");
+	    var LocationService = (function () {
+	        function LocationService() {
+	        }
+	        LocationService.init = function () {
+	            window.addEventListener('message', function (event) {
+	                var data = event.data;
+	                if (data && data.module === 'geolocation') {
+	                    Utils.publish('location', event.data);
+	                }
+	            }, false);
+	            iframe.setAttribute("width", "0");
+	            iframe.setAttribute("height", "0");
+	            iframe.setAttribute("frameborder", "0");
+	            iframe.setAttribute("scrolling", "no");
+	            iframe.style.display = "none";
+	            iframe.setAttribute("src", targetOrigin + "/tools/geolocation?key=YLZBZ-XDPKU-LWMV6-2WNPB-PL5W5-H6BGL&referer=WebGlobe");
+	            document.body.appendChild(iframe);
+	        };
+	        LocationService.getLocation = function () {
+	            iframe.contentWindow.postMessage('getLocation', targetOrigin);
+	        };
+	        LocationService.getRobustLocation = function () {
+	            iframe.contentWindow.postMessage('getLocation.robust', targetOrigin);
+	        };
+	        LocationService.watchPosition = function () {
+	            iframe.contentWindow.postMessage('watchPosition', targetOrigin);
+	        };
+	        LocationService.clearWatch = function () {
+	            iframe.contentWindow.postMessage('clearWatch', targetOrigin);
+	        };
+	        return LocationService;
+	    }());
+	    LocationService.init();
+	    Object.defineProperty(exports, "__esModule", { value: true });
+	    exports.default = LocationService;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
 	    var Renderer = (function () {
 	        function Renderer(canvas, onBeforeRender, onAfterRender) {
@@ -512,7 +666,7 @@
 
 
 /***/ },
-/* 6 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -520,7 +674,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(9), __webpack_require__(8), __webpack_require__(7), __webpack_require__(10), __webpack_require__(12), __webpack_require__(13), __webpack_require__(14)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vertice, Vector, Line, TileGrid_1, Matrix, Object3D) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(5), __webpack_require__(11), __webpack_require__(10), __webpack_require__(9), __webpack_require__(12), __webpack_require__(14), __webpack_require__(15), __webpack_require__(16)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vertice, Vector, Line, TileGrid_1, Matrix, Object3D) {
 	    "use strict";
 	    var CameraCore = (function () {
 	        function CameraCore(fov, aspect, near, far, realLevel, matrix) {
@@ -579,7 +733,7 @@
 	            this.far = far;
 	            this.animationDuration = 200;
 	            this.nearFactor = 0.6;
-	            this.baseTheoryDistanceFromCamera2EarthSurface = 1.23 * Kernel.EARTH_RADIUS;
+	            this.baseTheoryDistanceFromCamera2EarthSurface = 1.4 * Kernel.EARTH_RADIUS;
 	            this.maxPitch = 40;
 	            this.isZeroPitch = true;
 	            this.level = -1;
@@ -1407,10 +1561,10 @@
 
 
 /***/ },
-/* 7 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(8)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Vertice) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(10)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Vertice) {
 	    "use strict";
 	    var Vector = (function () {
 	        function Vector(x, y, z) {
@@ -1526,7 +1680,7 @@
 
 
 /***/ },
-/* 8 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -1556,10 +1710,10 @@
 
 
 /***/ },
-/* 9 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(8), __webpack_require__(7), __webpack_require__(10), __webpack_require__(11)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, Vertice, Vector, Line, Plan) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(5), __webpack_require__(10), __webpack_require__(9), __webpack_require__(12), __webpack_require__(13)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, Vertice, Vector, Line, Plan) {
 	    "use strict";
 	    if (!Math.log2) {
 	        Math.log2 = function (value) { return (Math.log(value) / Math.log(2)); };
@@ -2079,7 +2233,7 @@
 
 
 /***/ },
-/* 10 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -2110,7 +2264,7 @@
 
 
 /***/ },
-/* 11 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -2133,10 +2287,10 @@
 
 
 /***/ },
-/* 12 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(9)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MathUtils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(11)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MathUtils) {
 	    "use strict";
 	    (function (TileGridPosition) {
 	        TileGridPosition[TileGridPosition["LEFT_TOP"] = 0] = "LEFT_TOP";
@@ -2327,10 +2481,10 @@
 
 
 /***/ },
-/* 13 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(8), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Vertice, Vector) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(5), __webpack_require__(10), __webpack_require__(9)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Vertice, Vector) {
 	    "use strict";
 	    var Matrix = (function () {
 	        function Matrix(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) {
@@ -2727,10 +2881,10 @@
 
 
 /***/ },
-/* 14 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(13)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Matrix) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(15)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Matrix) {
 	    "use strict";
 	    var Object3D = (function () {
 	        function Object3D() {
@@ -2824,111 +2978,45 @@
 
 
 /***/ },
-/* 15 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(16)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, GraphicGroup) {
-	    "use strict";
-	    var Scene = (function (_super) {
-	        __extends(Scene, _super);
-	        function Scene() {
-	            _super.apply(this, arguments);
-	        }
-	        return Scene;
-	    }(GraphicGroup));
-	    return Scene;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
-	    "use strict";
-	    var GraphicGroup = (function () {
-	        function GraphicGroup() {
-	            this.visible = true;
-	            this.id = ++Kernel.idCounter;
-	            this.children = [];
-	        }
-	        GraphicGroup.prototype.add = function (g, first) {
-	            if (first === void 0) { first = false; }
-	            if (first) {
-	                this.children.unshift(g);
-	            }
-	            else {
-	                this.children.push(g);
-	            }
-	            g.parent = this;
-	        };
-	        GraphicGroup.prototype.remove = function (g) {
-	            var result = false;
-	            var findResult = this.findGraphicById(g.id);
-	            if (findResult) {
-	                g.destroy();
-	                this.children.splice(findResult.index, 1);
-	                g = null;
-	                result = true;
-	            }
-	            return result;
-	        };
-	        GraphicGroup.prototype.clear = function () {
-	            var i = 0, length = this.children.length, g = null;
-	            for (; i < length; i++) {
-	                g = this.children[i];
-	                g.destroy();
-	            }
-	            this.children = [];
-	        };
-	        GraphicGroup.prototype.destroy = function () {
-	            this.parent = null;
-	            this.clear();
-	        };
-	        GraphicGroup.prototype.findGraphicById = function (graphicId) {
-	            var i = 0, length = this.children.length, g = null;
-	            for (; i < length; i++) {
-	                g = this.children[i];
-	                if (g.id === graphicId) {
-	                    return {
-	                        index: i,
-	                        graphic: g
-	                    };
-	                }
-	            }
-	            return null;
-	        };
-	        GraphicGroup.prototype.shouldDraw = function () {
-	            return this.visible && this.children.length > 0;
-	        };
-	        GraphicGroup.prototype.draw = function (camera) {
-	            if (this.shouldDraw()) {
-	                this.onDraw(camera);
-	            }
-	        };
-	        GraphicGroup.prototype.onDraw = function (camera) {
-	            this.children.forEach(function (g) {
-	                if (g.shouldDraw(camera)) {
-	                    g.draw(camera);
-	                }
-	            });
-	        };
-	        return GraphicGroup;
-	    }());
-	    return GraphicGroup;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(9), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vector) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
+	    "use strict";
+	    var ImageUtils = {
+	        MAX_LEVEL: 4,
+	        images: {},
+	        add: function (url, img) {
+	            this.images[url] = img;
+	        },
+	        get: function (url) {
+	            return this.images[url];
+	        },
+	        remove: function (url) {
+	            delete this.images[url];
+	        },
+	        clear: function () {
+	            this.images = {};
+	        },
+	        getCount: function () {
+	            var count = 0;
+	            for (var url in this.images) {
+	                if (this.images.hasOwnProperty(url)) {
+	                    count++;
+	                }
+	            }
+	            return count;
+	        }
+	    };
+	    return ImageUtils;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(5), __webpack_require__(11), __webpack_require__(9)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Vector) {
 	    "use strict";
 	    var EventHandler = (function () {
 	        function EventHandler(canvas) {
@@ -3237,7 +3325,7 @@
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3245,7 +3333,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(19)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(20), __webpack_require__(35)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer, LabelLayer_1) {
 	    "use strict";
 	    var GoogleTiledLayer = (function (_super) {
 	        __extends(GoogleTiledLayer, _super);
@@ -3258,13 +3346,25 @@
 	            if (this.idx === undefined) {
 	                this.idx = 0;
 	            }
-	            var url = "";
-	            if (this.style === "Satellite") {
-	                url = "//mt" + this.idx + ".google.cn/maps/vt?lyrs=s%40709&hl=zh-CN&gl=CN&&x=" + column + "&y=" + row + "&z=" + level;
+	            var lyrs = "y";
+	            switch (this.style) {
+	                case "Satellite":
+	                    lyrs = "s";
+	                    break;
+	                case "Road":
+	                    lyrs = "m";
+	                    break;
+	                case "RoadOnly":
+	                    lyrs = "h";
+	                    break;
+	                case "Terrain":
+	                    lyrs = "p";
+	                    break;
+	                case "TerrainOnly":
+	                    lyrs = "t";
+	                    break;
 	            }
-	            else {
-	                url = "//mt" + this.idx + ".google.cn/vt/hl=zh-CN&gl=CN&x=" + column + "&y=" + row + "&z=" + level;
-	            }
+	            var url = "//mt" + this.idx + ".google.cn/maps/vt?lyrs=" + lyrs + "&hl=zh-CN&gl=CN&&x=" + column + "&y=" + row + "&z=" + level;
 	            this.idx++;
 	            if (this.idx >= 4) {
 	                this.idx = 0;
@@ -3273,12 +3373,34 @@
 	        };
 	        return GoogleTiledLayer;
 	    }(TiledLayer));
-	    return GoogleTiledLayer;
+	    exports.GoogleTiledLayer = GoogleTiledLayer;
+	    ;
+	    var GoogleLabelLayer = (function (_super) {
+	        __extends(GoogleLabelLayer, _super);
+	        function GoogleLabelLayer() {
+	            _super.apply(this, arguments);
+	            this.idx = 0;
+	        }
+	        GoogleLabelLayer.prototype.getTileUrl = function (level, row, column) {
+	            if (this.idx === undefined) {
+	                this.idx = 0;
+	            }
+	            var url = "//mt" + this.idx + ".google.cn/vt/imgtp=png32&lyrs=h@365000000&hl=zh-CN&gl=cn&x=" + column + "&y=" + row + "&z=" + level + "&s=Galil";
+	            this.idx++;
+	            if (this.idx >= 4) {
+	                this.idx = 0;
+	            }
+	            return url;
+	        };
+	        return GoogleLabelLayer;
+	    }(LabelLayer_1.default));
+	    exports.GoogleLabelLayer = GoogleLabelLayer;
+	    ;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3286,7 +3408,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(3), __webpack_require__(20), __webpack_require__(21), __webpack_require__(16), __webpack_require__(33)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Kernel, Extent, Tile, GraphicGroup, SubTiledLayer) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(5), __webpack_require__(4), __webpack_require__(21), __webpack_require__(22), __webpack_require__(3), __webpack_require__(34)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Utils, Kernel, Extent, Tile, GraphicGroup, SubTiledLayer) {
 	    "use strict";
 	    var TiledLayer = (function (_super) {
 	        __extends(TiledLayer, _super);
@@ -3324,7 +3446,6 @@
 	            var pitch = camera.getPitch();
 	            options.threshold = 1;
 	            var lastLevelTileGrids = camera.getVisibleTilesByLevel(lastLevel, options);
-	            this._updateSubLayerCount(lastLevel);
 	            var levelsTileGrids = [];
 	            var parentTileGrids = lastLevelTileGrids;
 	            var subLevel;
@@ -3340,9 +3461,10 @@
 	                this.children[subLevel].updateTiles(subLevel, levelsTileGrids[subLevel], addNew);
 	            }
 	        };
-	        TiledLayer.prototype._updateSubLayerCount = function (level) {
+	        TiledLayer.prototype.updateSubLayerCount = function () {
+	            var lastLevel = Kernel.globe.getLastLevel();
 	            var subLayerCount = this.children.length;
-	            var deltaLevel = level + 1 - subLayerCount;
+	            var deltaLevel = lastLevel + 1 - subLayerCount;
 	            var i, subLayer;
 	            if (deltaLevel > 0) {
 	                for (i = 0; i < deltaLevel; i++) {
@@ -3470,7 +3592,7 @@
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -3511,7 +3633,7 @@
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3519,7 +3641,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(20), __webpack_require__(9), __webpack_require__(25), __webpack_require__(22), __webpack_require__(28), __webpack_require__(31), __webpack_require__(32), __webpack_require__(12)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Extent, MathUtils, MeshGraphic, TileMaterial, TileGeometry, Vertice, Triangle, TileGrid_1) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(21), __webpack_require__(11), __webpack_require__(26), __webpack_require__(23), __webpack_require__(29), __webpack_require__(32), __webpack_require__(33), __webpack_require__(14)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Extent, MathUtils, MeshGraphic, TileMaterial, TileGeometry, Vertice, Triangle, TileGrid_1) {
 	    "use strict";
 	    var TileInfo = (function () {
 	        function TileInfo(level, row, column, url) {
@@ -3661,7 +3783,7 @@
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3669,7 +3791,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(23), __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial, ImageUtils) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(24), __webpack_require__(17)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial, ImageUtils) {
 	    "use strict";
 	    var TileMaterial = (function (_super) {
 	        __extends(TileMaterial, _super);
@@ -3690,7 +3812,7 @@
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3698,7 +3820,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(24), __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Material, ImageUtils) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(25), __webpack_require__(17)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Material, ImageUtils) {
 	    "use strict";
 	    var MeshTextureMaterial = (function (_super) {
 	        __extends(MeshTextureMaterial, _super);
@@ -3786,7 +3908,7 @@
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -3801,7 +3923,7 @@
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -3809,7 +3931,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(26), __webpack_require__(27)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Program, Graphic) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(27), __webpack_require__(28)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Program, Graphic) {
 	    "use strict";
 	    var vs = "\nattribute vec3 aPosition;\nattribute vec2 aUV;\nvarying vec2 vUV;\nuniform mat4 uPMVMatrix;\n\nvoid main()\n{\n\tgl_Position = uPMVMatrix * vec4(aPosition,1.0);\n\tvUV = aUV;\n}\n";
 	    var fs = "\nprecision mediump float;\nvarying vec2 vUV;\nuniform sampler2D uSampler;\n\nvoid main()\n{\n\tgl_FragColor = texture2D(uSampler, vec2(vUV.s, vUV.t));\n}\n";
@@ -3867,10 +3989,10 @@
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
 	    var Program = (function () {
 	        function Program(vs, fs) {
@@ -4019,10 +4141,10 @@
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
 	    var Graphic = (function () {
 	        function Graphic(geometry, material) {
@@ -4068,7 +4190,7 @@
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4076,7 +4198,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(29)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Mesh) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(30)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Mesh) {
 	    "use strict";
 	    var TileGeometry = (function (_super) {
 	        __extends(TileGeometry, _super);
@@ -4092,7 +4214,7 @@
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4100,7 +4222,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(14), __webpack_require__(30)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Object3D, VertexBufferObject) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(16), __webpack_require__(31)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Object3D, VertexBufferObject) {
 	    "use strict";
 	    var Mesh = (function (_super) {
 	        __extends(Mesh, _super);
@@ -4231,12 +4353,12 @@
 
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel) {
 	    "use strict";
-	    var maxBufferSize = 50;
+	    var maxBufferSize = 200;
 	    var buffers = [];
 	    var VertexBufferObject = (function () {
 	        function VertexBufferObject(target) {
@@ -4284,7 +4406,7 @@
 
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -4304,7 +4426,7 @@
 
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports) {
@@ -4328,7 +4450,7 @@
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4336,7 +4458,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(20), __webpack_require__(12), __webpack_require__(16), __webpack_require__(21)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Extent, TileGrid_1, GraphicGroup, Tile) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(21), __webpack_require__(14), __webpack_require__(3), __webpack_require__(22)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Extent, TileGrid_1, GraphicGroup, Tile) {
 	    "use strict";
 	    var SubTiledLayer = (function (_super) {
 	        __extends(SubTiledLayer, _super);
@@ -4474,41 +4596,6 @@
 
 
 /***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(35)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, LabelLayer_1) {
-	    "use strict";
-	    var AutonaviLabelLayer = (function (_super) {
-	        __extends(AutonaviLabelLayer, _super);
-	        function AutonaviLabelLayer() {
-	            _super.apply(this, arguments);
-	            this.idx = 1;
-	        }
-	        AutonaviLabelLayer.prototype.getTileUrl = function (level, row, column) {
-	            if (this.idx === undefined) {
-	                this.idx = 1;
-	            }
-	            var url = "http://wprd0" + this.idx + ".is.autonavi.com/appmaptile?x=" + column + "&y=" + row + "&z=" + level + "&lang=zh_cn&size=1&scl=1&style=8&type=11";
-	            this.idx++;
-	            if (this.idx >= 5) {
-	                this.idx = 1;
-	            }
-	            return url;
-	        };
-	        return AutonaviLabelLayer;
-	    }(LabelLayer_1.default));
-	    Object.defineProperty(exports, "__esModule", { value: true });
-	    exports.default = AutonaviLabelLayer;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -4517,7 +4604,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(21), __webpack_require__(33)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Tile, SubTiledLayer) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(22), __webpack_require__(34)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Tile, SubTiledLayer) {
 	    "use strict";
 	    var LabelLayer = (function (_super) {
 	        __extends(LabelLayer, _super);
@@ -4566,23 +4653,57 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(37)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TrafficLayer_1) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(20), __webpack_require__(35)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, TiledLayer, LabelLayer_1) {
 	    "use strict";
-	    var QihuTrafficLayer = (function (_super) {
-	        __extends(QihuTrafficLayer, _super);
-	        function QihuTrafficLayer() {
-	            _super.apply(this, arguments);
-	            this.minLevel = 8;
+	    var AutonaviTiledLayer = (function (_super) {
+	        __extends(AutonaviTiledLayer, _super);
+	        function AutonaviTiledLayer(style) {
+	            if (style === void 0) { style = "Default"; }
+	            _super.call(this, style);
+	            this.idx = 1;
 	        }
-	        QihuTrafficLayer.prototype.getTileUrl = function (level, row, column) {
-	            row = Math.pow(2, level) - row - 1;
-	            var timestamp = Date.now();
-	            return "//qhapi.map.ishowchina.com/lkinfo/?act=tile&x=" + column + "&y=" + row + "&z=" + level + "&t=" + timestamp;
+	        AutonaviTiledLayer.prototype.getTileUrl = function (level, row, column) {
+	            if (this.idx === undefined) {
+	                this.idx = 1;
+	            }
+	            var url = "";
+	            if (this.style === 'Satellite') {
+	                url = "//webst0" + this.idx + ".is.autonavi.com/appmaptile?style=6&x=" + column + "&y=" + row + "&z=" + level;
+	            }
+	            else {
+	                url = "//webst0" + this.idx + ".is.autonavi.com/appmaptile?style=7&x=" + column + "&y=" + row + "&z=" + level;
+	            }
+	            this.idx++;
+	            if (this.idx >= 5) {
+	                this.idx = 1;
+	            }
+	            return url;
 	        };
-	        return QihuTrafficLayer;
-	    }(TrafficLayer_1.default));
-	    Object.defineProperty(exports, "__esModule", { value: true });
-	    exports.default = QihuTrafficLayer;
+	        return AutonaviTiledLayer;
+	    }(TiledLayer));
+	    exports.AutonaviTiledLayer = AutonaviTiledLayer;
+	    ;
+	    var AutonaviLabelLayer = (function (_super) {
+	        __extends(AutonaviLabelLayer, _super);
+	        function AutonaviLabelLayer() {
+	            _super.apply(this, arguments);
+	            this.idx = 1;
+	        }
+	        AutonaviLabelLayer.prototype.getTileUrl = function (level, row, column) {
+	            if (this.idx === undefined) {
+	                this.idx = 1;
+	            }
+	            var url = "//webst0" + this.idx + ".is.autonavi.com/appmaptile?style=8&x=" + column + "&y=" + row + "&z=" + level;
+	            this.idx++;
+	            if (this.idx >= 5) {
+	                this.idx = 1;
+	            }
+	            return url;
+	        };
+	        return AutonaviLabelLayer;
+	    }(LabelLayer_1.default));
+	    exports.AutonaviLabelLayer = AutonaviLabelLayer;
+	    ;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -4595,30 +4716,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(35)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, LabelLayer_1) {
-	    "use strict";
-	    var TrafficLayer = (function (_super) {
-	        __extends(TrafficLayer, _super);
-	        function TrafficLayer() {
-	            _super.apply(this, arguments);
-	        }
-	        return TrafficLayer;
-	    }(LabelLayer_1.default));
-	    Object.defineProperty(exports, "__esModule", { value: true });
-	    exports.default = TrafficLayer;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 38 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(25), __webpack_require__(39), __webpack_require__(23), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshGraphic, AtmosphereGeometry, MeshTextureMaterial, Vector) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(26), __webpack_require__(38), __webpack_require__(24), __webpack_require__(9)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshGraphic, AtmosphereGeometry, MeshTextureMaterial, Vector) {
 	    "use strict";
 	    var Atmosphere = (function (_super) {
 	        __extends(Atmosphere, _super);
@@ -4667,7 +4765,7 @@
 
 
 /***/ },
-/* 39 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4675,7 +4773,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(31), __webpack_require__(32), __webpack_require__(29), __webpack_require__(8), __webpack_require__(13)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshVertice, Triangle, Mesh, Vertice, Matrix) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(32), __webpack_require__(33), __webpack_require__(30), __webpack_require__(10), __webpack_require__(15)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, MeshVertice, Triangle, Mesh, Vertice, Matrix) {
 	    "use strict";
 	    var Atmosphere = (function (_super) {
 	        __extends(Atmosphere, _super);
@@ -4733,7 +4831,7 @@
 
 
 /***/ },
-/* 40 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4741,7 +4839,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(3), __webpack_require__(4), __webpack_require__(9), __webpack_require__(26), __webpack_require__(27), __webpack_require__(41), __webpack_require__(30)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Program, Graphic, PoiMaterial, VertexBufferObject) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(4), __webpack_require__(5), __webpack_require__(11), __webpack_require__(27), __webpack_require__(28), __webpack_require__(40), __webpack_require__(31)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, Kernel, Utils, MathUtils, Program, Graphic, PoiMaterial, VertexBufferObject) {
 	    "use strict";
 	    var Poi = (function () {
 	        function Poi(x, y, z, uuid, name, address, phone) {
@@ -4849,7 +4947,7 @@
 
 
 /***/ },
-/* 41 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = (this && this.__extends) || function (d, b) {
@@ -4857,7 +4955,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(23)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(24)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, MeshTextureMaterial) {
 	    "use strict";
 	    var PoiMaterial = (function (_super) {
 	        __extends(PoiMaterial, _super);
