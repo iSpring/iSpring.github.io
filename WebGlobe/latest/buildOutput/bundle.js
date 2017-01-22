@@ -97,15 +97,13 @@
 	            this.eventHandler = new EventHandler(canvas);
 	            var tiledLayer = new Google_1.GoogleTiledLayer("Satellite");
 	            this.setTiledLayer(tiledLayer);
-	            if (Utils.isMobile()) {
-	                Utils.subscribe('location', function (data) {
-	                    console.log(data);
-	                    _this.showLocation(data);
-	                });
-	                LocationService_1.default.getRobustLocation();
-	                LocationService_1.default.getLocation();
-	                LocationService_1.default.watchPosition();
-	            }
+	            Utils.subscribe('location', function (data) {
+	                console.log(data);
+	                _this.showLocation(data);
+	            });
+	            LocationService_1.default.getRobustLocation();
+	            LocationService_1.default.getLocation();
+	            LocationService_1.default.watchPosition();
 	        }
 	        Globe.prototype.showLocation = function (locationData) {
 	            var lon = locationData.lng;
@@ -357,7 +355,7 @@
 	    var EARTH_RADIUS = 500;
 	    var MAX_PROJECTED_COORD = Math.PI * EARTH_RADIUS;
 	    var MAX_LAST_LEVEL = 18;
-	    var DELTA_LEVEL_BETWEEN_LAST_LEVEL_AND_CURRENT_LEVEL = 4;
+	    var DELTA_LEVEL_BETWEEN_LAST_LEVEL_AND_CURRENT_LEVEL = 3;
 	    var MAX_LEVEL = MAX_LAST_LEVEL - DELTA_LEVEL_BETWEEN_LAST_LEVEL_AND_CURRENT_LEVEL;
 	    var Kernel = (function () {
 	        function Kernel() {
