@@ -36,17 +36,18 @@
 
     function createRepoNode(repoInfo, parentNode) {
         //https://img.shields.io/github/stars/iSpring/WebGlobe.svg
-        // var starBadgeUrl = "https://img.shields.io/github/stars/iSpring/" + repoInfo.name + ".svg";
+        //var starBadgeUrl = "https://img.shields.io/github/stars/iSpring/" + repoInfo.name + ".svg";
 
         //https://ghbtns.com/github-btn.html?user=iSpring&repo=WebGlobe&type=star&count=true
         var starBadgeUrl = 'https://ghbtns.com/github-btn.html?user=iSpring&repo=' + repoInfo.name + '&type=star&count=true';
+        var forkBadgeUrl = 'https://ghbtns.com/github-btn.html?user=iSpring&repo=' + repoInfo.name + '&type=fork&count=true';
 
         var str = '' +
             '<a style="display:inline-block;color:#3d84b0;padding:15px;text-decoration:none;" target="_blank">' +
             '<div>' +
             '<span class="repo-name" style="display:inline-block;height:24px;line-height:24px;vertical-align:middle;"></span>' +
-            // '<img class="star-badge" style="height:20px;vertical-align:middle;margin-left:20px;" src="' + starBadgeUrl + '" />' +
             '<iframe class="star-badge" src="' + starBadgeUrl + '" frameborder="0" scrolling="0" width="120px" height="20px" style="vertical-align:middle;margin-left:20px;"></iframe>' +
+            '<iframe class="fork-badge" src="' + forkBadgeUrl + '" frameborder="0" scrolling="0" width="120px" height="20px" style="vertical-align:middle;margin-left:10px;"></iframe>' +
             '</div>' +
             '<div class="repo-description"></div>' +
             '</a>';
