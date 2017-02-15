@@ -1,94 +1,54 @@
-﻿<!doctype html>
-<html style="width:100%;height:100%;">
-	<head>
-		<title>WebGlobe</title>
-		<meta http-equiv="Content-Type" content="text/html"/>
-		<meta name="charset" content="utf-8"/>
-		<style type="text/css">
-			*{
-				margin:0;
-				padding:0;
-			}
-		</style>
+<!DOCTYPE html>
+<html>
 
-    <script type="text/javascript" src="require.js"></script>
+<head>
+    <title>WebGlobe</title>
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta charset="utf-8" />
+    <!--<meta name="charset" content="utf-8" />-->
+    <meta name="viewport" content="user-scalable=no, width=device-width">
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <link rel="shortcut icon" href="images/logo.png" />
     <script type="text/javascript">
-      require.config({
-        baseUrl: "js",
-        paths: {
-          world: "world"
-        },
-        waitSeconds: 0
-      });
+        var reg = /^https:\/\/ispring.github.io\/WebGlobe\/index.html/ig;
+        if (reg.test(window.location.href)) {
+            var search = window.location.search;
+            if (search) {
+                var paramsObj = {};
+                var kvs = search.replace("?", "").split("&");
+                var splits = null;
+                for (var i = 0; i < kvs.length; i++) {
+                    splits = kvs[i].split("=");
+                    if (splits.length === 2) {
+                        paramsObj[splits[0]] = splits[1];
+                    }
+                }
+                var version = "";
+                if (paramsObj.hasOwnProperty("v")) {
+                    version = paramsObj.v;
+                }
+                var supportedVersions = ["0.2.1", "0.4.4"];
+                if (supportedVersions.indexOf(version) >= 0) {
+                    window.location.href = version + "/index.html";
+                }
+            }
+        }
     </script>
+</head>
 
-		<script type="text/javascript">
-      window.onload = function(){
-        require(["world/Globe", "world/BingTiledLayer", "world/NokiaTiledLayer", "world/OsmTiledLayer", "world/SosoTiledLayer", "world/TiandituTiledLayer", "world/GoogleTiledLayer"],
-          function(Globe, BingTiledLayer, NokiaTiledLayer, OsmTiledLayer, SosoTiledLayer, TiandituTiledLayer, GoogleTiledLayer){
+<body onselectstart="return false;">
+    <canvas id="canvasId" width="1000" height="1000"></canvas>
+    <a id="fork-me" target="_blank" href="https://github.com/iSpring/WebGlobe">
+        <img src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub"
+            data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png">
+    </a>
+    <a id="about-me" target="_blank" href="http://github.com/iSpring">
+        <img src="images/iSpring.png" />
+    </a>
+<script type="text/javascript" src="buildOutput/bundle.js?b59d5395de5f67831d1b"></script></body>
 
-          var canvas,globe;
-
-          function startWebGL(){
-            globe = new Globe(canvas);
-            var mapSelector = document.getElementById("mapSelector");
-            mapSelector.onchange = changeTiledLayer;
-            changeTiledLayer();
-          }
-
-          function changeTiledLayer(){
-            var mapSelector = document.getElementById("mapSelector");
-            mapSelector.blur();
-            var newTiledLayer = null;
-            var args = null;
-            var value = mapSelector.value;
-            switch(value){
-              case "bing":
-                newTiledLayer = new BingTiledLayer();
-                break;
-              case "nokia":
-                newTiledLayer = new NokiaTiledLayer();
-                break;
-              case "osm":
-                newTiledLayer = new OsmTiledLayer();
-                break;
-              case "soso":
-                newTiledLayer = new SosoTiledLayer();
-                break;
-              case "tianditu":
-                newTiledLayer = new TiandituTiledLayer();
-                break;
-              default:
-                break;
-            }
-
-            if(newTiledLayer){
-              globe.setTiledLayer(newTiledLayer);
-            }
-          }
-
-          function initAll(){
-            canvas = document.getElementById("canvasId");
-            startWebGL();
-          }
-
-          canvas = document.getElementById("canvasId");
-          startWebGL();
-        });
-      };
-		</script>
-	</head>
-	<body onselectstart = "return false;" style="position:relative;width:100%;height:100%;overflow:hidden;cursor:default;">
-		<select id="mapSelector" style="position:absolute;top:20px;right:20px;">
-      <option value="nokia">Nokia Map</option>
-      <option value="bing">Bing Map</option>
-      <option value="osm">OpenStreetMap</option>
-      <option value="soso">SOSO地图</option>
-      <option value="tianditu">天地图</option>
-		</select>
-		<canvas id="canvasId" width="1000" height="1000" style="cursor:default;"></canvas>
-		<a href="http://blog.csdn.net/iispring" target="_blank" style="position:absolute;right:0px;bottom:0px;">
-			<img src="images/iSpring.png" />
-		</a>
-	</body>
 </html>
