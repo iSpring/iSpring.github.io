@@ -10,7 +10,7 @@
         document.body.append(a);
     }
 
-    forkMeOnGitHub();
+    // forkMeOnGitHub();
 
     var containerNode = document.getElementById("custom_column_21591691");
     if (!containerNode) {
