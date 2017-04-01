@@ -23,7 +23,7 @@
         panelBody.style.textAlign = "center";
     }
 
-    var repoNames = ["WebGlobe", "GamePlane"];
+    var repoNames = ["WebGlobe", "GamePlane", "babel-webpack-react-redux-tutorials"];
 
     function getRepoInfo(data, repoName) {
         for (var i = 0; i < data.length; i++) {
