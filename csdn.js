@@ -23,7 +23,16 @@
         panelBody.style.textAlign = "center";
     }
 
-    var repoNames = ["WebGlobe", "GamePlane", "babel-webpack-react-redux-tutorials"];
+    var repoNames = [{
+        name: "WebGlobe",
+        label: "WebGlobe"
+    }, {
+        name: "GamePlane",
+        label: "GamePlane"
+    }, {
+        name: "babel-webpack-react-redux-tutorials",
+        label: "React技术栈教程"
+    }];
 
     function getRepoInfo(data, repoName) {
         for (var i = 0; i < data.length; i++) {
@@ -34,7 +43,7 @@
         return null;
     }
 
-    function createRepoNode(repoInfo, parentNode) {
+    function createRepoNode(repoInfo, label, parentNode) {
         //https://img.shields.io/github/stars/iSpring/WebGlobe.svg
         //var starBadgeUrl = "https://img.shields.io/github/stars/iSpring/" + repoInfo.name + ".svg";
 
@@ -53,7 +62,7 @@
             '</a>';
         var a = $(str);
         a.attr("href", repoInfo.html_url);
-        $(".repo-name", a).text(repoInfo.name);
+        $(".repo-name", a).text(label);//repoInfo.name
         $(".repo-description", a).text(repoInfo.description);
         a.appendTo(parentNode);
     }
@@ -63,10 +72,12 @@
         data: {},
         complete: function(response) {
             var data = response.responseJSON;
-            $.each(repoNames, function(i, repoName) {
+            $.each(repoNames, function(i, item) {
+                var repoName = item.name;
+                var label = item.label;
                 var repoInfo = getRepoInfo(data, repoName);
                 if (repoInfo) {
-                    createRepoNode(repoInfo, containerNode);
+                    createRepoNode(repoInfo, label, containerNode);
                 }
             });
         }
