@@ -10,14 +10,15 @@
     }
 
     function hideAds() {
-        debugger;
         var styleDom = document.createElement("style");
         // WebKit hack
         styleDom.appendChild(document.createTextNode(""));
         document.head.appendChild(styleDom);
+        //styleDom.sheet只有在styleDom被添加到document中才不为空
         var styleSheet = styleDom.sheet;
         addRules(styleSheet, "#layerd", "display:none !important;");
         addRules(styleSheet, "#wrapper", "display: none !important;");
+        addRules(styleSheet, ".adsbygoogle", "display:none !important;");
     }
 
 
