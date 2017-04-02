@@ -14,10 +14,10 @@
         var styleDom = document.createElement("style");
         // WebKit hack
         styleDom.appendChild(document.createTextNode(""));
+        document.head.appendChild(styleDom);
         var styleSheet = styleDom.sheet;
         addRules(styleSheet, "#layerd", "display:none !important;");
         addRules(styleSheet, "#wrapper", "display: none !important;");
-        document.head.appendChild(styleDom);
     }
 
 
