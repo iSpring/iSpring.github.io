@@ -12,6 +12,7 @@
     function hideAds() {
         debugger;
         var styleDom = document.createElement("style");
+        styleDom.setAttribute("type", "text/css");
         // WebKit hack
         styleDom.appendChild(document.createTextNode(""));
         document.head.appendChild(styleDom);
