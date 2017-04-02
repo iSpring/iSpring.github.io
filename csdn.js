@@ -1,8 +1,24 @@
 (function() {
-    var ad = document.getElementById("layerd");
-    if (ad) {
-        ad.style.display = "none";
+
+    function addRules(styleSheet, selector, rule) {
+        var index = styleSheet.cssRules.length;
+        if (typeof styleSheet.inserRule === 'function') {
+            styleSheet.inserRule(selector + '{' + rule + '}', index);
+        } else if (typeof styleSheet.addRule === 'function') {
+            styleSheet.addRule(selector, rule, index);
+        }
     }
+
+    function hideAds() {
+        var styleDom = document.createElement("style");
+        // WebKit hack
+        styleDom.appendChild(document.createTextNode(""));
+        var styleSheet = styleDom.sheet;
+        addRules(styleSheet, "#layerd", "display:none !important;");
+        addRules(styleSheet, "#wrapper", "display: none !important;");
+        document.head.appendChild(styleDom);
+    }
+
 
     function forkMeOnGitHub() {
         //https://github.com/blog/273-github-ribbons
@@ -87,4 +103,6 @@
             });
         }
     });
+
+    hideAds();
 })();
