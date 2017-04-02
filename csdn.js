@@ -2,8 +2,8 @@
 
     function addRules(styleSheet, selector, rule) {
         var index = styleSheet.cssRules.length;
-        if (typeof styleSheet.inserRule === 'function') {
-            styleSheet.inserRule(selector + '{' + rule + '}', index);
+        if (typeof styleSheet.insertRule === 'function') {
+            styleSheet.insertRule(selector + '{' + rule + '}', index);
         } else if (typeof styleSheet.addRule === 'function') {
             styleSheet.addRule(selector, rule, index);
         }
@@ -17,9 +17,9 @@
         document.head.appendChild(styleDom);
         //styleDom.sheet只有在styleDom被添加到document中才不为空
         var styleSheet = styleDom.sheet;
-        addRules(styleSheet, "#layerd", "display:none !important;");
-        addRules(styleSheet, "#wrapper", "display: none !important;");
-        addRules(styleSheet, ".adsbygoogle", "display:none !important;");
+        addRules(styleSheet, "#layerd", "display:none !important");
+        addRules(styleSheet, "#wrapper", "display: none !important");
+        addRules(styleSheet, ".adsbygoogle", "display:none !important");
     }
 
 
