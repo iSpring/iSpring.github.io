@@ -1,4 +1,9 @@
 (function() {
+    var ad = document.getElementById("layerd");
+    if (ad) {
+        ad.style.display = "none";
+    }
+
     function forkMeOnGitHub() {
         //https://github.com/blog/273-github-ribbons
         //http://tholman.com/github-corners/
@@ -62,7 +67,7 @@
             '</a>';
         var a = $(str);
         a.attr("href", repoInfo.html_url);
-        $(".repo-name", a).text(label);//repoInfo.name
+        $(".repo-name", a).text(label); //repoInfo.name
         $(".repo-description", a).text(repoInfo.description);
         a.appendTo(parentNode);
     }
