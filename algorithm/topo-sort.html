@@ -6,18 +6,92 @@
     <script>
         //------------------------------------拓扑排序---------------------------------------------
 
+        /*
+        http://blog.csdn.net/lisonglisonglisong/article/details/45543451
+        在图论中，拓扑排序（Topological Sorting）是一个有向无环图（DAG, Directed Acyclic Graph）的所有顶点的线性序列。
+        且该序列必须满足下面两个条件：
+            每个顶点出现且只出现一次。
+            若存在一条从顶点 A 到顶点 B 的路径，那么在序列中顶点 A 出现在顶点 B 的前面。
+
+        有向无环图（DAG）才有拓扑排序，非DAG图没有拓扑排序一说。
+
+        那么如何写出它的拓扑排序呢？这里说一种比较常用的方法：
+            从 DAG 图中选择一个 没有前驱（即入度为0）的顶点并输出。
+            从图中删除该顶点和所有以它为起点的有向边。
+            重复 1 和 2 直到当前的 DAG 图为空或当前图中不存在无前驱的顶点为止。后一种情况说明有向图中必然存在环。
+
+        http://blog.csdn.net/baidu_30541191/article/details/47622259
+        */        
+
         //Graph是有向图
         function Graph(verticeCount){
+            //排序过程中，不会更改邻接表adjList，但是会修改indegree和zeroIndegree
             this.verticeCount = verticeCount;
-            this.adjList = [];//邻接表[]
+            this.adjList = [];//邻接表[[0节点的后继数组],[1节点的后继数组],...[n-1节点的后继数组]]
+            this.indegree = [];//存储所有节点的入度，默认都为0
+            this.zeroIndegree = [];//存储入度为0的节点
             for(var i = 0; i < this.verticeCount; i++){
-                this.vertices.push(i);
+                this.adjList.push([]);//创建第i个节点的后继数组
+                this.indegree.push(0);
             }
         }
 
+        //构建一条从from节点指向to节点的有向边
         Graph.prototype.addEdge = function(from, to){
-
+            //to节点是from节点的后继，将其放入到from的后继列表中
+            this.adjList[from].push(to);
+            //更新to节点的入度
+            this.indegree[to]++;
         };
+
+        Graph.prototype.topoSort = function(){
+            //排序过程中，不会更改邻接表adjList，但是会修改indegree和zeroIndegree
+
+            for(let i = 0; i < this.indegree.length; i++){
+                if(this.indegree[i] === 0){
+                    this.zeroIndegree.push(i);
+                }
+            }
+
+            let count = 0;//记录输出的点的个数
+
+            let sortList = [];
+
+            //循环遍历入度为0的节点数组，每次拿出一个节点，删除该节点以及与其关联的有向边，更新其后继节点的入度（减一）
+            //对后继节点的入度减一之后，立即检查该后继节点的入度是否为0，如果为0，把它加入到this.zeroIndegree中，
+            //下次循环再次从this.zeroIndegree中取出队头元素
+            while(this.zeroIndegree.length > 0){
+                //zeroIndegree是一个队列，从队头出栈一个元素
+                let from = this.zeroIndegree.shift();
+                sortList.push(from);
+                //更新from中的后继列表的入度（减一）
+                let tos = this.adjList[from];
+                for(let j = 0; j < tos.length; j++){
+                    let to = tos[j];
+                    //将后继的入度减一
+                    this.indegree[to]--;
+                    if(this.indegree[to] === 0){
+                        this.zeroIndegree.push(to);
+                    }
+                }
+            }
+
+            if(sortList.length < this.adjList.length){
+                console.log('有向图中有回路');
+            }else{
+                console.log(sortList);
+            }
+        };
+
+        var graph = new Graph(6);
+        graph.addEdge(5, 2);
+        graph.addEdge(5, 0);
+        graph.addEdge(4, 0);
+        graph.addEdge(4, 1);
+        graph.addEdge(2, 3);
+        graph.addEdge(3, 1);
+        graph.topoSort();
+        //输出: [4, 5, 2, 0, 3, 1]
     </script>
 </head>
 
