@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>归并排序</title>
+    <script>
+        //---------------------------------归并排序------------------------------
+
+        // function mergeCore(arr1, arr2){
+        //     var arr = [];
+        //     var length1 = arr1.length;
+        //     var length2 = arr2.length;
+        //     var i = j = k = 0;
+        //     while(i < length1 && j < length2){
+        //         if(arr1[i] < arr2[j]){
+        //             arr.push(arr1[i]);
+        //             i++;
+        //         }else{
+        //             arr.push(arr2[j]);
+        //             j++;
+        //         }
+        //     }
+        //     while(i < length1){
+        //         arr.push(arr1[i]);
+        //         i++;
+        //     }
+        //     while(j < length2){
+        //         arr.push(arr2[j]);
+        //         j++;
+        //     }
+        //     return arr;
+        // }
+
+        //将有二个有序数列a[first...mid]和a[mid...last]合并。
+        function mergeCore(arr, first, mid, last){
+            var temp = [];
+            var i = first;
+            var j = mid + 1;
+            while(i <= mid && j <= last){
+                if(arr[i] <= arr[j]){
+                    temp.push(arr[i]);
+                    i++;
+                }else{
+                    temp.push(arr[j]);
+                    j++;
+                }
+            }
+            while(i <= mid){
+                temp.push(arr[i]);
+                i++;
+            }
+            while(j <= last){
+                temp.push(arr[j]);
+                j++;
+            }
+            var count = last - first + 1;
+            for(var k = 0; k < count; k++){
+                arr[first + k] = temp[k];
+            }
+        }
+
+        //递归调用
+        function mergeSort(arr, first, last){
+            if(first < last){
+                var mid = Math.floor((first + last) / 2);
+                //使左边有序
+                mergeSort(arr, first, mid);
+                //使右边有序
+                mergeSort(arr, mid + 1, last);
+                //将两个有序数组合并
+                mergeCore(arr, first, mid, last);
+            }
+        }
+
+        //归并排序的入口函数
+        function mergeMain(arr){
+            mergeSort(arr, 0, arr.length - 1);
+        }
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

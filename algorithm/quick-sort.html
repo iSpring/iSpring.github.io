@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>快速排序</title>
+    <script>
+
+        //---------------------------------快速排序------------------------------------
+
+        function quickSort(arr){
+            var leftIndex = 0;
+            var rightIndex = arr.length - 1;
+            quickSortCore(arr, leftIndex, rightIndex);
+        }
+
+        function quickSortCore(arr, leftIndex, rightIndex){
+            if(leftIndex >= rightIndex){
+                return;
+            }
+            var boundary = getBoundary(arr, leftIndex, rightIndex);
+            quickSort(arr, leftIndex, boundary - 1);
+            quickSort(arr, boundary + 1, rightIndex);
+        }
+
+        function getBoundary(arr, leftIndex, rightIndex){
+            var standard = arr[leftIndex];
+
+            while(leftIndex < rightIndex){
+                while(leftIndex < rightIndex && arr[rightIndex] >= standard){
+                    rightIndex--;
+                }
+                swap(arr, leftIndex, rightIndex);
+                while(leftIndex < rightIndex && arr[leftIndex] <= standard){
+                    leftIndex++;
+                }
+                swap(arr, leftIndex, rightIndex);
+            }
+
+            return leftIndex;
+        }
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

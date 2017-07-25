@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>最短路径</title>
+    <script>
+        //------------------------------------最短路径----------------------------------------------
+        function dijkstra(mat, numIndex) {
+            var dis = [].concat(mat[numIndex]);
+            var n = dis.length;
+            var marked = [];
+            marked.push(numIndex);
+            for(var i = 0; i < n; i++) {
+                //find not-marked min index and value
+                var notMarkedMinIndex = -1;
+                var notMarekdMinValue = Infinity;
+                for (var j = 0; j < n; j++) {
+                    if (marked.indexOf(j) < 0) {
+                        var value = dis[j];
+                        if (value < notMarekdMinValue) {
+                            notMarkedMinIndex = j;
+                            notMarekdMinValue = value;
+                        }
+                    }
+                }
+
+                if(notMarkedMinIndex < 0){
+                    continue;
+                }
+
+                var distFromNotMarkedMinIndex = mat[notMarkedMinIndex];
+                for (var k = 0; k < n; k++) {
+                    if (distFromNotMarkedMinIndex[k] < Infinity) {
+                        if (dis[k] > (notMarekdMinValue + distFromNotMarkedMinIndex[k])) {
+                            dis[k] = (notMarekdMinValue + distFromNotMarkedMinIndex[k]);
+                        }
+                    }
+                }
+                marked.push(notMarkedMinIndex);
+                console.log(dis);
+            }
+        }
+
+        var m = [
+            [0, 1, 12, Infinity, Infinity, Infinity],
+            [Infinity, 0, 9, 3, Infinity, Infinity],
+            [Infinity, Infinity, 0, Infinity, 5, Infinity],
+            [Infinity, Infinity, 4, 0, 13, 15],
+            [Infinity, Infinity, Infinity, Infinity, 0, 4],
+            [Infinity, Infinity, Infinity, Infinity, 0]
+        ];
+
+        dijkstra(m, 0);
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

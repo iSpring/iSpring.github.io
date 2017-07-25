@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>二叉树遍历</title>
+    <script>
+        //--------------------------------二叉树遍历-----------------------------------
+
+        //前序遍历非递归
+        function traversal1(rootNode){
+            var stack = [];
+            var currentNode = null;
+            stack.push(rootNode);
+            while(stack.length > 0){
+                currentNode = stack.pop();
+                console.log(currentNode.name);
+                if(currentNode.right){
+                    stack.push(currentNode.right);
+                }
+                if(currentNode.left){
+                    stack.push(currentNode.left);
+                }
+            }
+        }
+
+        //中序遍历非递归
+        function traversal2(rootNode){
+            var stack = [];
+            var currentNode = rootNode;
+            while(currentNode && stack.length > 0){
+                while(currentNode){
+                    stack.push(currentNode);
+                    currentNode = currentNode.left;
+                }
+                currentNode = stack.pop();
+                console.log(currentNode.name);
+                currentNode = currentNode.right;
+            }
+        }
+
+        //广度遍历
+        function traversal3(rootNode){
+            var queue = [];
+            var currentNode = null;
+            queue.push(rootNode);
+            while(queue.length > 0){
+                currentNode = queue.shift();
+                console.log(currentNode.name);
+
+                if(currentNode.left){
+                    queue.push(currentNode.left);
+                }
+
+                if(currentNode.right){
+                    queue.push(currentNode.right);
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
