@@ -14,6 +14,15 @@ const postData = querystring.stringify({
     f: 'pjson'
 });
 
+console.log(`http.globalAgent.maxSockets:${http.globalAgent.maxSockets}`);//Infinity
+
+const agent = new http.Agent({
+    keepAlive: true,//default false
+    keepAliveMsecs: 2000,//default 1000
+    maxSockets: 100//default Infinity
+});
+
+//options.agent可设置也可以不设置，控制keepAlive等行为
 const options = {
     protocol: 'http:',
     host: 'sampleserver6.arcgisonline.com',
@@ -22,7 +31,8 @@ const options = {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(postData)
     },
-    path: '/arcgis/rest/services/SampleWorldCities/MapServer/0'
+    path: '/arcgis/rest/services/SampleWorldCities/MapServer/0',
+    agent: agent//http.globalAgent
 };
 
 //req是http.ClientRequest对象，是Writable Stream
