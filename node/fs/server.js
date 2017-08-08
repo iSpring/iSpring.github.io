@@ -10,7 +10,7 @@ const testDirPath = path.join(__dirname, 'test');
 删除文件夹: fs.rmdir(path,callback); 只能删除空文件夹，如果要删除文件夹下面的内容需要自己实现
 删除文件: fs.unlink(path,callback);
 重命名: fs.rename(oldPath, newPath, callback)
-读取整个文件内容: fs.readFile(path[, options], callback)
+读取整个文件内容: fs.readFile(path[, options], callback),如果通过options指定encoding，那么得到string，否则得到buffer
 覆盖写入文件内容: fs.writeFile(file, data[, options], callback)
 追加写入文件内容: fs.appendFile(file, data[, options], callback)
 打开文件获取数字类型的文件描述符: fs.open(path, flags[, mode], callback)
