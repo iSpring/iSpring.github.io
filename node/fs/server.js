@@ -7,13 +7,14 @@ const testDirPath = path.join(__dirname, 'test');
 判断路径是否存在: fs.exists(path, callback)官方建议使用fs.stat()和fs.access()替代
 创建文件夹: fs.mkdir(path[,mode],callback); mode - 设置目录权限，默认为 0777
 读取文件夹下的子目录和子文件fileNames: fs.readdirSync(path)
-删除文件夹: fs.rmdir(path,callback);
+删除文件夹: fs.rmdir(path,callback); 只能删除空文件夹，如果要删除文件夹下面的内容需要自己实现
 删除文件: fs.unlink(path,callback);
 重命名: fs.rename(oldPath, newPath, callback)
 读取整个文件内容: fs.readFile(path[, options], callback)
 覆盖写入文件内容: fs.writeFile(file, data[, options], callback)
 追加写入文件内容: fs.appendFile(file, data[, options], callback)
 打开文件获取数字类型的文件描述符: fs.open(path, flags[, mode], callback)
+关闭文件描述符: fs.close(fd, callback)
 根据文件描述符写入数据: fs.write(fd, buffer[, offset[, length[, position]]], callback)
 根据文件描述符写入数据: fs.write(fd, string[, position[, encoding]], callback)
 根据文件描述符读取数据: fs.read(fd, buffer, offset, length, position, callback)
@@ -107,3 +108,7 @@ console.log(fileContent);
 //文件拷贝
 const testFilePath2 = path.join(testDirPath, '2.txt');
 fs.createReadStream(testFilePath1).pipe(fs.createWriteStream(testFilePath2));
+
+//创建快捷方式
+const testFilePath3 = path.join(testDirPath, '3.txt');
+fs.linkSync(testFilePath2, testFilePath3);
