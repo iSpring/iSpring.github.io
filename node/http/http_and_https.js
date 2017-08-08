@@ -8,6 +8,10 @@ const basePort = 3000;
 const httpPort = basePort + 1;
 const httpsPort = basePort + 2;
 
+//var app = express();
+//app.use();
+
+//此处的app也可以是express()的实例
 function app(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/plain'
@@ -56,8 +60,8 @@ http.createServer(app).listen(httpPort, function () {
 });
 
 const options = {
-    key: fs.readFileSync('./cakey.pem'),
-    cert: fs.readFileSync('./cacert.pem')
+    key: fs.readFileSync('./cakey.pem'),//私钥
+    cert: fs.readFileSync('./cacert.pem')//公钥
 };
 
 https.createServer(options, app).listen(httpsPort, function () {
