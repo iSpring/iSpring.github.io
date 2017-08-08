@@ -31,6 +31,14 @@ Instead, user code should open/read/write the file directly
 and handle the error raised if the file is not available.
 To check if a file exists without manipulating it afterwards, 
 fs.access() is recommended.
+
+fs.open(path,flags[,mode],[callback(err,data)]);
+flag控制打开文件的行为：
+r读取模式
+w写入模式
+r+和w+都表示读取写入模式
+rs同步读取
+rs+同步读取写入
 */
 
 
