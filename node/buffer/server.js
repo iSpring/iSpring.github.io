@@ -73,3 +73,18 @@ const StringDecoder = require('string_decoder').StringDecoder;
 const decoder = new StringDecoder('utf8');
 console.log(decoder.write(Buffer.from([0xC2, 0xA2])));//¢
 console.log(decoder.write(Buffer.from([0xE2, 0x82, 0xAC])));//€
+
+/*
+buf.write(string[, offset[, length]][, encoding])
+向buf中写入字符串，返回写入的字节数量
+Added in: v0.1.90
+  ● string <string> String to be written to buf
+  ● offset <integer> Where to start writing string. Default: 0
+  ● length <integer> How many bytes to write. Default: buf.length - offset
+  ● encoding <string> The character encoding of string. Default: 'utf8'
+  ● Returns: <integer> Number of bytes written
+*/
+const buf7 = Buffer.allocUnsafe(256);
+const len = buf7.write('\u00bd + \u00bc = \u00be', 0);
+// Prints: 12 bytes: ½ + ¼ = ¾
+console.log(`${len} bytes: ${buf7.toString('utf8', 0, len)}`);
