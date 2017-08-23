@@ -8,6 +8,7 @@ sorted sets with range queries, bitmaps, hyperloglogs and geospatial indexes wit
 
 const redis = require('redis');
 const client = redis.createClient(6379, 'localhost');
+client.auth('xxx');
 client.sadd('testSet', 1);
 client.sadd('testSet', 'a');
 client.sadd('testSet', 'a');

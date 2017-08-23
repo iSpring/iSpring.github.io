@@ -1,11 +1,19 @@
 /**
+ * http://redis.js.org/
  * https://www.npmjs.com/package/redis
  * https://github.com/NodeRedis/node_redis
+ * http://www.cnblogs.com/zhangchao-letv/p/6114030.html
  * 通过set和get方法可以设置string类型的值
  */
 
  const redis = require('redis');
  const client = redis.createClient(6379, 'localhost');
+ client.auth('xxx');
+ 
+ client.on("error", function (err) {
+    console.log("Error " + err);
+ });
+
  client.set('name', 'zhangsan');
  //redis需要通过回调获取值
  client.get('name', function(err, value){
@@ -33,3 +41,12 @@
          console.log(person.age, person.salary);
      }
  });
+
+ //https://redis.io/commands/expire
+ //通用:设置key在10秒后过期
+ client.expire('name', 10);
+// client.set('name', 'sunqun', 'EX', 10);
+
+//https://redis.io/commands/del
+//通用:删除某个key
+client.del(['name']);

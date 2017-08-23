@@ -5,6 +5,7 @@
 
 const redis = require('redis');
 const client = redis.createClient(6379, 'localhost');
+client.auth('xxx');
 //redis中的list和数组很像，用rpush相当于执行数组的push方法，lpush相当于执行数组的unshift方法
 client.rpush('testList', 'a');
 client.rpush('testList', 'b');
