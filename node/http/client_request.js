@@ -64,8 +64,10 @@ req.on('error', function(e){
     console.error(e);
 });
 
+//通过req.write()方法写入数据
 req.write(postData);
 
+//最后需要调用req.end()方法
 req.end();
 
 //------------------------------------------------------------------------------------

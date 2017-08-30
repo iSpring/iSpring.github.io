@@ -7,9 +7,9 @@
 const crypto = require('crypto');
 
 //使用md5加密
-let a = crypto.createHash('md5');
-a.update('sunqun');
-console.log(a.digest().toString('utf8'));
+let a = crypto.createHash('md5');//指定加密算法
+a.update('sunqun');//传入待加密内容
+console.log(a.digest().toString('utf8'));//生成摘要
 
 console.log('----------------------------------');
 

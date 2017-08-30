@@ -1,5 +1,5 @@
 ﻿//tcp连接负责监听basePort，在onTcpConnection中转发给httpPort或httpsPort
-const net = require('net');
+const net = require('net');//主要用于TCP处理
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
@@ -24,6 +24,7 @@ function onTcpConnection(tcpSocket) {
     tcpSocket.once('data', function (buf) {
         try {
             // A TLS handshake record starts with byte 22.
+            // TLS/HTTPS连接第一个字节为22
             var port = (buf[0] === 22) ? httpsPort : httpPort;
             var proxySocket = net.createConnection(port, function () {
                 try {

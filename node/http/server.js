@@ -25,8 +25,9 @@ http.createServer(function(req, res){
         post += chunk;
     });
  
-    // 在end事件触发后，通过querystring.parse将post解析为真正的POST请求格式，然后向客户端返回。
-    req.on('end', function(){    
+    // 在req的end事件触发后，通过querystring.parse将post解析为真正的POST请求格式，然后向客户端返回。
+    req.on('end', function(){
+        //将post字符串转换成keyValue对象  
         post = querystring.parse(post);
         res.end(util.inspect(post));
     });*/
@@ -51,8 +52,8 @@ http.createServer(function(req, res){
     });
     response.writeHead(statusCode[, statusMessage][, headers])
     response.writeHead()是一个大一统的方法设置响应头，该方法中statusCode必须设置。
-    如果不调用response.writeHead，可以给res.statusCode赋值设置状态码，
-    给res.statusMessage赋值设置状态消息，用res.setHeader(name, value(s))挨个设置header
+    如果不调用response.writeHead()，可以给res.statusCode赋值设置状态码，
+    给res.statusMessage赋值设置状态消息，用res.setHeader(name, value(s))挨个设置header。
 
 
     response.getHeader(name)用于读取之前设置的header
@@ -60,7 +61,7 @@ http.createServer(function(req, res){
     const contentType = response.getHeader('content-type');
 
 
-    response.getHeaderNames()用于返回之前设置的header的names
+    response.getHeaderNames()用于返回之前设置的header的names，并且返回的name都是小写
     Returns an array containing the unique names of the current outgoing headers. All header names are lowercase.
     response.setHeader('Foo', 'bar');
     response.setHeader('Set-Cookie', ['foo=bar', 'bar=baz']);

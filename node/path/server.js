@@ -10,7 +10,7 @@ console.log('joint path : ' + path.join('/test', 'test1', '2slashes/1slash', 'ta
 console.log('resolve : ' + path.resolve('main.js'));
 
 // 路径中文件的后缀名
-console.log('ext name : ' + path.extname('main.js'));
+console.log('ext name : ' + path.extname('main.js'));//返回.js
 
 //path.sep => 平台的文件路径分隔符，'\\' 或 '/'。
 

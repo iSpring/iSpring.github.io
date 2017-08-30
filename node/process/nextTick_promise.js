@@ -7,7 +7,7 @@ new Promise(funcA).then(cb, errcb)中funcA是同步执行的
 process.nextTick 高于 Promise.then
 setTimeout的优先级高于setIImmediate
 
-优先级： process.nextTick > Promise.then > setTimeout(0) > setIImmediate
+优先级： process.nextTick > Promise.then > setTimeout(0) > setImmediate
 
 setTimeout的创建要涉及到创建红黑树等性能消耗，所以如果是想创建异步操作的话毋庸置疑是使用setImmediate
 
