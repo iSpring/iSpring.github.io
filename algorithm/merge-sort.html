@@ -4,40 +4,111 @@
 <head>
     <title>归并排序</title>
     <script>
+        /*
+        http://blog.csdn.net/morewindows/article/details/6678165
+        http://blog.csdn.net/yinjiabin/article/details/8265827/
+        假设我们有一个没有排好序的序列，那么首先我们使用分割的办法将这个序列分割成一个个已经排好序的子序列。
+        然后再利用归并的方法将一个个的子序列合并成排序好的序列。分割和归并的过程可以看下面的图例。
+
+        算法复杂度：所有情况下的时间复杂度都是O(n*log2n)        
+        算法稳定度：稳定排序
+        辅助空间为O(n)
+        
+        */
+
+        //将两个有序数组合并成一个有序数组，可能会单独问，所以写一下
+        function mergeTwoSortedArrToOneSortedArray(arr1, arr2) {
+            var arr = [];
+            var i = 0; //指向arr1头部
+            var lastIndex1 = arr1.length - 1;
+            var j = 0; //指向arr2头部
+            var lastIndex2 = arr2.length - 1;
+            //!!! while(i <= lastIndex1 && j <= lastIndex2)
+            while (i <= lastIndex1 && j <= lastIndex2) {
+                if (arr1[i] <= arr2[j]) {
+                    arr.push(arr1[i]);
+                    i++;
+                } else {
+                    arr.push(arr2[j]);
+                    j++;
+                }
+            }
+
+            while (i <= lastIndex1) {
+                arr.push(arr1[i]);
+                i++;
+            }
+
+            while (j <= lastIndex2) {
+                arr.push(arr2[j]);
+                j++;
+            }
+            return arr;
+        }
+
         //---------------------------------归并排序------------------------------
 
-        // function mergeCore(arr1, arr2){
-        //     var arr = [];
-        //     var length1 = arr1.length;
-        //     var length2 = arr2.length;
-        //     var i = j = k = 0;
-        //     while(i < length1 && j < length2){
-        //         if(arr1[i] < arr2[j]){
-        //             arr.push(arr1[i]);
-        //             i++;
-        //         }else{
-        //             arr.push(arr2[j]);
-        //             j++;
-        //         }
-        //     }
-        //     while(i < length1){
-        //         arr.push(arr1[i]);
-        //         i++;
-        //     }
-        //     while(j < length2){
-        //         arr.push(arr2[j]);
-        //         j++;
-        //     }
-        //     return arr;
-        // }
-
-        //将有二个有序数列a[first...mid]和a[mid...last]合并。
-        function mergeCore(arr, first, mid, last){
+        //将二个有序数组a[first...mid]和a[mid...last]合并成一个有序数组
+        function merge(arr, first, mid, last) {
             var temp = [];
+            var i = first; //i指向第一个数组的头部
+            var j = mid + 1; //j指向第二个数组的头部
+            //!!! 这里是while循环，记住条件，while(i <= mid && j <= last)
+            while (i <= mid && j <= last) {
+                //把arr[i]和arr[j]中的较小值放入temp数组中，并移动索引
+                if (arr[i] <= arr[j]) {
+                    temp.push(arr[i]);
+                    i++;
+                } else {
+                    temp.push(arr[j]);
+                    j++;
+                }
+            }
+            //!!! i <= mid
+            while (i <= mid) {
+                temp.push(arr[i]);
+                i++;
+            }
+            //!!! j <= last
+            while (j <= last) {
+                temp.push(arr[j]);
+                j++;
+            }
+            //把temp数组中的内容重新写回到arr中的对应位置
+            var count = last - first + 1;
+            for (var k = 0; k < count; k++) {
+                arr[first + k] = temp[k];
+            }
+        }
+
+        //递归调用
+        function mergeCore(arr, first, last) {
+            if (first < last) {
+                var mid = Math.floor((first + last) / 2);
+                //使左边有序
+                //!!! mid
+                mergeCore(arr, first, mid);
+                //使右边有序
+                //!!! mid + 1
+                mergeCore(arr, mid + 1, last);
+                //将两个有序数组合并
+                merge(arr, first, mid, last);
+            }
+        }
+
+        //归并排序的入口函数
+        function mergeSort(arr) {
+            mergeCore(arr, 0, arr.length - 1);
+            return arr;
+        }
+
+        /*
+        function merge2(arr, first, mid, last){
             var i = first;
             var j = mid + 1;
+            var temp = [];
             while(i <= mid && j <= last){
-                if(arr[i] <= arr[j]){
+                if(arr[i] <= arr[mid]){
                     temp.push(arr[i]);
                     i++;
                 }else{
@@ -54,28 +125,38 @@
                 j++;
             }
             var count = last - first + 1;
-            for(var k = 0; k < count; k++){
+            for(k = 0; k < count; k++){
                 arr[first + k] = temp[k];
             }
         }
 
-        //递归调用
-        function mergeSort(arr, first, last){
-            if(first < last){
-                var mid = Math.floor((first + last) / 2);
-                //使左边有序
-                mergeSort(arr, first, mid);
-                //使右边有序
-                mergeSort(arr, mid + 1, last);
-                //将两个有序数组合并
-                mergeCore(arr, first, mid, last);
-            }
+        function mergeCore2(arr, first, last){
+            var mid = Math.floor((first + last) / 2);
+            mergeCore2(arr, first, mid);
+            mergeCore2(arr, mid + 1, last);
+            merge(arr, first, mid, last);
         }
 
-        //归并排序的入口函数
-        function mergeMain(arr){
-            mergeSort(arr, 0, arr.length - 1);
+        function mergeSort2(arr){
+            mergeCore2(arr, 0, arr.length - 1);
+            return arr;
         }
+
+        */
+
+        function test() {
+            var arr1 = [14, 12, 15, 13, 11, 16];
+            console.log(mergeSort(arr1));
+
+            // var arr2 = [14, 12, 15, 13, 11, 16];
+            // console.log(mergeSort(arr2));
+
+            var arr2 = [12,14,15];
+            var arr3 = [11, 13, 16];
+            console.log(mergeTwoSortedArrToOneSortedArray(arr2, arr3));
+        }
+
+        test();
     </script>
 </head>
 
