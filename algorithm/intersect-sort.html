@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>插入排序</title>
+    <script>
+
+        /*
+        http://www.cnblogs.com/kkun/archive/2011/11/23/2260265.html
+        http://blog.csdn.net/morewindows/article/details/6665714
+        设数组为a[0…n-1]。
+        1.  初始时，a[0]自成1个有序区，无序区为a[1..n-1]。令i=1
+        2.  将a[i]并入当前的有序区a[0…i-1]中形成a[0…i]的有序区间。
+        3.  i++并重复第二步直到i==n-1。排序完成。
+        直接插入排序是稳定的排序方法，属于内部排序。
+        时间复杂度：平均时间复杂度为O(n2)，最坏时间复杂度O(n2)	
+        空间复杂度：O(1)
+        */
+
+        //---------------------------------插入排序------------------------------------
+
+        function intersectSort(arr){
+            //i从1开始，因为a[0]本身就认为有序
+            for(let i = 1; i < arr.length; i++){
+                //确保v放置在a[0 -- i]之间的合适位置确保这一区域是有序的
+                // if(arr[i] < arr[i - 1]){
+                    let temp = arr[i];
+                    let j = i;//让j指向i，j就是最终要放temp值的索引，我们要计算j
+                    //如果j-1的位置的值比temp大，那么就让j-1的值落到j上，下降
+
+                    //!!一定要记住循环条件是j > 0 && arr[j-1] > temp
+                    while (j > 0 && arr[j - 1] > temp){
+                        //记住循环体的内容
+                        arr[j] = arr[j - 1];
+                        j--;
+                    }
+
+                    //!!记住给arr[j]赋值
+                    arr[j] = temp;
+                // }
+            }
+        }
+
+        // function intersectSort111(arr){
+        //     for(let i = 1; i < arr.length; i++){
+        //         let temp = arr[i];
+        //         let j = i;
+        //         while(j > 0 && arr[j - 1] > temp){
+        //             arr[j] = arr[j - 1];
+        //             j--;
+        //         }
+        //         arr[j] = temp;
+        //     }
+        // }
+
+        // function intersectSort1(arr){
+        //     for(let i = 1; i < arr.length; i++){
+        //         let temp = arr[i];
+        //         let j = i;
+        //         while(j > 0 && arr[j-1] > temp){
+        //             arr[j] = arr[j-1];
+        //             j--;
+        //         }
+        //         arr[j] = temp;
+        //     }
+        // }
+
+        function test(){
+            var arr = [7, 2, 3, 5, 8, 0];
+            intersectSort(arr);
+            console.log(arr);
+        }
+
+        test();
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

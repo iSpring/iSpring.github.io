@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>希尔排序</title>
+    <script>
+
+        /*
+        http://www.cnblogs.com/chengxiao/p/6104371.html
+        http://blog.csdn.net/morewindows/article/details/6668714
+
+        希尔排序是希尔（Donald Shell）于1959年提出的一种排序算法。
+        希尔排序也是一种插入排序，它是简单插入排序经过改进之后的一个更高效的版本，
+        也称为缩小增量排序，同时该算法是冲破O(n2）的第一批算法之一。
+
+        Shell 排序的时间性能优于直接插入排序，希尔排序在效率上较直接插人排序有较大的改进。
+        希尔排序是不稳定的。
+        平均复杂度在O(n1.3次方)，最坏复杂度还是O(n2）
+        */
+
+        //---------------------------------希尔排序------------------------------------
+
+        //插入排序的经典代码
+        // function intersectSort(arr){
+        //     for(let i = 1; i < arr.length; i++){
+        //         let temp = arr[i];
+        //         let j = i;
+        //         while(j > 0 && arr[j - 1] > temp){
+        //             arr[j] = arr[j - 1];
+        //             j--;
+        //         }
+        //         arr[j] = temp;
+        //     }
+        // }
+
+        function shellSort(arr){
+            //gap指的是分组的数量，最开始gap为arr.length/2，也就是开始的时候分组很多，每组只有两个成员
+            //然后不断使得gap分组数量折半，这样每组成员数量翻倍
+            //最后gap为1，只有一组，这一组的成员就是arr全部成员
+            for(let gap = parseInt(arr.length / 2); gap > 0; gap = parseInt(gap / 2)){
+                //遍历所有的组
+                //!!! i<gap
+                for(let i = 0; i < gap; i++){
+
+                    //------------------插入排序开始--------------------------
+                    //对每一组都分别使用插入排序
+                    //!!!let j = i+ gap; j < arr.length; j +=  gap
+                    //!!! j < arr.length
+                    for(let j = i + gap; j < arr.length; j +=  gap){
+                        let temp = arr[j];
+                        let k = j;
+                        //!!! k > gap && arr[k - gap] > temp
+                        //确保arr[k - gap]没有异常
+                        while((k - gap) >= 0 && arr[k - gap] > temp){
+                            arr[k] = arr[k - gap];
+                            k -= gap;
+                        }
+                        arr[k] = temp;
+                    }
+
+                    //------------------插入排序结束--------------------------
+                }
+            }
+        }
+
+        // function shellSort2(arr){
+        //     //gap依次折半
+        //     for(let gap = parseInt(arr.length / 2); gap > 0; gap = parseInt(gap / 2)){
+        //         //遍历gap个分组
+        //         for(let i = 0; i < gap; i++){
+        //             //进行插入排序
+        //             for(let j = i + gap; j < arr.length; j+=gap){
+        //                 let temp = arr[j];
+        //                 let k = j;
+        //                 while((k-gap)>=0 && arr[k-gap] > temp){
+        //                     arr[k] = arr[k-gap];
+        //                     k-=gap;
+        //                 }
+        //                 arr[k] = temp;
+        //             }
+        //         }
+        //     }
+        // }
+
+        function test(){
+            var arr = [7, 2, 3, 5, 8, 0];
+            shellSort(arr);
+            console.log(arr);
+        }
+
+        test();
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
