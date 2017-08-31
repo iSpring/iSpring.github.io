@@ -4,6 +4,15 @@
 <head>
     <title>冒泡排序</title>
     <script>
+
+        /*
+        http://www.cnblogs.com/kkun/archive/2011/11/23/2260280.html
+        冒泡排序（Bubble Sort）是一种交换排序，
+        它的基本思想是：两两比较相邻记录的关键字，如果反序则交换，直到没有反序的记录为止。
+        算法复杂度：平均算法复杂度O(n2)，最坏算法复杂度O(n2)
+        稳定性：稳定排序
+        */
+
         //----------------------------------冒泡排序-----------------------------------
 
         function swap(arr, i, j){
@@ -12,25 +21,110 @@
             arr[j] = temp;
         }
 
+        /*
+        简单冒泡排序bubble1
+        这种算法不是相邻两个元素之间比较大小，而是将i处的值与[i+1, 最后]之间所有的值直接比较，并与i处的值替换。
+        假设a[10]，那么第一轮比较a[0]与a[1]-arr[9]的大小，只要比a[0]小，就与a[0]交换，
+        第一轮之后a[0]最小，第二轮比较a[1]与a[2]-a[9]的大小，只要比a[1]小，就与a[1]交换，第二轮之后a[0]<a[1]<其他。
+        这样循环的结果是：
+        a[0] < 其他
+        a[0] < a[1] < 其他
+        a[0] < a[1] < a[2] < 其他
+        */
+        //从小到大排序
         function bubble1(arr){
             for(var i = 0; i < arr.length; i++){
+                //!!! var j = i + 1;
+                //保证a[i]在区间[i, arr.length - 1]之间是最小的
                 for(var j = i + 1; j < arr.length; j++){
-                    if(arr[j] > arr[i]){
+                    if(arr[i] > arr[j]){
                         swap(arr, j, i);
                     }
                 }
             }
+            return arr;
         }
 
+        // function bubble1_(arr){
+        //     for(let i = 0; i < arr.length; i++){
+        //         //let j = i + 1;
+        //         for(let j = i + 1; j < arr.length; j++){
+        //             if(arr[i] > arr[j]){
+        //                 swap(arr, i, j);
+        //             }
+        //         }
+        //     }
+        // }
+
+        /*
+        改进版冒泡排序bubble2
+        该算法对相邻两个元素进行比较，如果满足条件则进行交换。
+        比如a[10]，第一次循环，依次对a[0]与a[1]，a[1]与a[2]，a[2]与a[3]...a[8]与a[9]进行比较，比较完成后，a[9]最大。
+        第二次循环，依次对a[0]与a[1]，a[1]与a[2]，a[2]与a[3]...a[7]与a[8]进行比较，比较完成后，其他 < a[8] < a[9]
+        这样经过几次循环后：
+        其他 < a[9]
+        其他 < a[8] < a[9]
+        其他 < a[7] < a[8] < a[9]
+
+        之所以在内循环中要判断j < arr.lenght - i - 1, 此处之所以减1是因为要确保arr[j+1]没有越界。
+        */
+        //从小到大排序
         function bubble2(arr){
             for(var i = 0; i < arr.length; i++){
+                //!!! var j = 0; j < arr.length - i - 1; j++
                 for(var j = 0; j < arr.length - i - 1; j++){
+                    //!!!比较j和j+1，体现相邻比较
                     if(arr[j] > arr[j+1]){
                         swap(arr, j, j+1);
                     }
                 }
             }
+            return arr;
         }
+
+        // function bubble2_(arr){
+        //     for(let i = 0; i < arr.length; i++){
+        //         //let j = 0; j < arr.length - i -1; j++
+        //         for(let j = 0; j < arr.length - i - 1; j++){
+        //             if(arr[j] > arr[j+1]){
+        //                 swap(arr, j, j+1);
+        //             }
+        //         }
+        //     }
+        // }
+
+        /*
+        在bubble2的基础上进行改进，如果某一个外循环中没有对数据进行交换，
+        说明数组已经变成了有序数组，这种情况下就直接退出排序，说明已经完成了排序。
+        使用一个标志位来标识当前数组是否有序，如果无需则继续排序，如果有序则退出排序，减少不必要的剩余对比。
+        */
+        //从小到大排序
+        function bubble3(arr){
+            let changed = true;//记录是否发生交换信息
+            for(let i = 0; i < arr.length && changed; i++){
+                //!!! changed = false;
+                changed = false;
+                for(let j = 0; j < arr.length - i - 1; j++){
+                    if(arr[j] > arr[j+1]){
+                        swap(arr, j, j+1);
+                        //此时发生交换，记录下来
+                        changed = true;
+                    }
+                }
+            }
+            return arr;
+        }
+
+        function test(){
+            var arr1 = [7, 2, 3, 5, 8, 0];
+            var arr2 = [7, 2, 3, 5, 8, 0];
+            var arr3 = [7, 2, 3, 5, 8, 0];
+            console.log(bubble1(arr1));
+            console.log(bubble2(arr2));
+            console.log(bubble3(arr3));
+        }
+
+        test();
     </script>
 </head>
 
