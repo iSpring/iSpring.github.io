@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>单链表</title>
+    <script>
+        /*
+        http://blog.csdn.net/zhenyusoso/article/details/6092843
+        http://www.jianshu.com/p/ac8d278cf469
+        http://www.jianshu.com/p/c65d9d753c31
+        http://www.cnblogs.com/maplejan/p/3903749.html
+        头指针->头结点->第一个数据节点->...->最后一个数据节点
+        可以没有头结点
+        */
+
+        function Node(){
+            this.value = null;
+            this.next = null;
+        }
+
+        class LinkedList{
+            constructor(arr){
+                this.head = new Node();//头指针，指向头结点headNode
+                this.tailNode = new Node();//尾节点，指向最后一个数据节点
+                this.head.next = null;
+                this.tailNode = null;
+                this.length = 0;
+
+                for(let i = 0; i < arr.length; i++){
+                    // let node = new Node();
+                    // node.value = arr[i];
+                    // //向尾节点后面插入node
+                    // this.tailNode.next = node;
+                    // //node设置为尾节点
+                    // this.tailNode = node;
+                    this.addToLast(arr[i]);
+                }
+            }
+
+            //遍历所有的数据节点
+            traversal(){
+                console.log('开始遍历单链表的数据节点');
+                var currentNode = this.head;
+                while(currentNode.next){
+                    currentNode = currentNode.next;
+                    console.log(currentNode.value);
+                }
+                console.log('遍历完毕');
+            }
+
+            getNodeIndex(node){
+                var currentNode = this.head;
+                var currentIndex = -1;
+                while(currentNode.next){
+                    currentNode = currentNode.next;
+                    currentIndex++;
+                    if(currentNode === node){
+                        return currentIndex;
+                    }
+                }
+                return -1;
+            }
+
+            getNodeByIndex(index){
+                if(index < 0){
+                    return null;
+                }
+                var currentNode = this.head;
+                var currentIndex = -1;
+                while(currentNode.next){
+                    currentNode = currentNode.next;
+                    currentIndex++;
+                    if(index === currentIndex){
+                        return currentNode;
+                    }
+                }
+                return null;
+            }
+
+            findPreNode(node){
+                var currentNode = this.head;
+                while(currentNode.next){
+                    if(currentNode.next === node){
+                        return currentNode;
+                    }
+                    currentNode = currentNode.next;
+                }
+                return null;
+            }
+
+            //在preNode后面添加node
+            addNode(preNode, valueOrNode){
+                //原始状态:preNode -> node2
+
+                let node = null;//new node
+                if(valueOrNode instanceof Node){
+                    node = valueOrNode;
+                }else{
+                    let value = valueOrNode;
+                    node = new Node();
+                    node.value = value;
+                }
+
+                //node指向preNode的next
+                node.next = preNode.next;
+                //状态：preNode -> node2 , node -> node2
+
+                //preNode指向node，这样preNode就断开了原有next的联系
+                preNode.next = node;
+                //状态: preNode -> node -> node2
+
+                if(this.tailNode){
+                    if(this.tailNode === preNode){
+                        //表明这次addNode是向尾节点后面插入节点
+                        this.tailNode = node;
+                    }
+                }else{
+                    //preNode是head，node是插入的第一个数据节点
+                    this.tailNode = node;
+                }
+            }
+
+            //将新的node放置到index位置上
+            addNodeByIndex(value, index){
+                let preIndex = index - 1;
+                let preNode = this.getNodeIndex(preIndex);
+                this.addNode(preNode, value);
+            }
+
+            addToFirst(value){
+                this.addNode(this.head, value);
+            }
+
+            addToLast(value){
+                if(this.tailNode){
+                    //表明已经有数据节点，尾节点存在，可以利用尾节点直接向后插入
+                    this.addNode(this.tailNode, value);
+                }else{
+                    //尾节点不存在，说明还不存在数据节点，那么插入最后一个和插入第一个一样
+                    this.addToFirst(value);
+                }
+            }
+
+            deleteNode(node){
+                let preNode = this.findPreNode(node);
+                if(!preNode){
+                    return;
+                }
+                preNode.next = node.next;
+                node.next = null;
+            }
+
+            //通过入栈、出栈的方式实现链表的反向
+            reverse(){
+                //依次遍历链表，将链表中的节点入栈
+                let nodeStack = [];
+                let currentNode = this.head.next;
+                while(currentNode){
+                    nodeStack.push(currentNode);
+                    currentNode = currentNode.next;
+                }
+
+                //重置head和tialNode
+                this.head.next = null;
+                this.tailNode = null;
+
+                //然后依次出栈获取元素，用于构建新的链表
+                while(nodeStack.length > 0){
+                    let node = nodeStack.pop();
+                    this.addToLast(node);
+                }
+            }
+
+            //http://www.jianshu.com/p/c65d9d753c31
+            // reverse2(){
+            //     let originHead = this.head;
+            //     let originTailNode = this.tailNode;
+
+            //     //a1 -> a2 -> a3 -> a4
+            //     //a1 <- a2(aNode) a3(bNode) -> a4(cNode)
+
+            //     var aNode = null;
+            //     var bNode = originHead;
+            //     var cNode = null;
+            //     while(bNode) {
+            //         cNode = bNode.next;
+            //         //!!! bNode.next = aNode;
+            //         bNode.next = aNode;
+            //         //abbc，简称abc
+            //         aNode = bNode;
+            //         bNode = cNode;
+            //     }
+
+            //     //aNode是翻转之后的链表的第一个数据节点
+            //     // this.headNode = originHeadNode;
+            //     // this.headNode.next = aNode;
+            //     // //更新head的指向
+            //     // this.head.next = this.headNode;
+            // }
+        }
+
+        function test(){
+            let arr = [1,2,3,4,5,6,7,8,9];
+            let linkedList = new LinkedList(arr);
+            linkedList.traversal();
+            linkedList.reverse();
+            linkedList.traversal();
+        }
+
+        test();
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
