@@ -19,7 +19,9 @@
 ## graph 图
  1. topo-sort.html 拓扑排序
 
- 2. dijkstra.html 迪杰斯特拉实现最短路径
+ 2. floyd 弗洛伊德实现多源最短路径
+
+ 3. dijkstra.html 迪杰斯特拉实现单源最短路径
 
 ## linked-list 链表
  1. single-linked-list.html 单链表

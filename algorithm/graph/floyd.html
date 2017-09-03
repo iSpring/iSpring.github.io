@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Floyd最短路径</title>
+    <script>
+        /*
+                http://ahalei.blog.51cto.com/4767671/1383613
+                Floyd最短路算法，它可以方便的求得任意两点的最短路径，这称为“多源最短路”。
+
+                理论上既可以求有向图的多源最短路径，也可以求无向图的多源最短路径。
+
+                通过这种方法我们可以求出任意两个点之间最短路径。它的时间复杂度是O(N3)。
+                令人很震撼的是它竟然只有五行代码，实现起来非常容易。
+                正是因为它实现起来非常容易，如果时间复杂度要求不高，
+                使用Floyd-Warshall来求指定两点之间的最短路或者指定一个点到其余各个顶点的最短路径也是可行的。
+                当然也有更快的算法，请看下一节：Dijkstra算法。
+                */
+
+        //------------------------------------以邻接矩阵实现的Floyd最短路径算法----------------------------------------------
+        function floyd(mat) {
+            //mat是邻接矩阵，是一个二维数组，该方法会修改mat内部的值
+            //for循环的次序k、i、j
+            let length = mat.length;
+            for (let k = 0; k < length; k++) {
+                for (let i = 0; i < length; i++) {
+                    for (let j = 0; j < length; j++) {
+                        if (mat[i][j] > (mat[i][k] + mat[k][j])) {
+                            mat[i][j] = mat[i][k] + mat[k][j];
+                        }
+                    }
+                }
+            }
+        }
+
+        let mat = [
+            [0, 2, 6, 4],
+            [Infinity, 0, 3, Infinity],
+            [7, Infinity, 0, 1],
+            [5, Infinity, 12, 0]
+        ];
+
+        floyd(mat);
+
+        /*
+        输出：
+        mat = [
+            [0, 2, 5, 4],
+            [9, 0, 3, 4],
+            [6, 8, 0, 1],
+            [5, 7, 10, 0]
+        ];
+        */        
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

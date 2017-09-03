@@ -2,19 +2,36 @@
 <html>
 
 <head>
-    <title>最短路径</title>
+    <title>Dijkstra最短路径</title>
     <script>
-        //------------------------------------最短路径----------------------------------------------
+        /*
+                http://ahalei.blog.51cto.com/4767671/1387799
+                上周我们介绍了神奇的只有五行的Floyd最短路算法，它可以方便的求得任意两点的最短路径，这称为“多源最短路”。
+                本周来来介绍指定一个点（源点）到其余各个顶点的最短路径，也叫做“单源最短路径”。
+                例如求下图中的1号顶点到2、3、4、5、6号顶点的最短路径。
+
+                我们发现dis[3]=12，dis[2]+e[2][3]=1+9=10，dis[3]>dis[2]+e[2][3]，因此dis[3]要更新为10。
+                这个过程有个专业术语叫做“松弛”。即1号顶点到3号顶点的路程即dis[3]，通过2->3这条边松弛成功。
+                这便是Dijkstra算法的主要思想：通过“边”来松弛1号顶点到其余各个顶点的路程。
+                */
+        //------------------------------------以邻接矩阵实现的Dijkstra最短路径算法----------------------------------------------
         function dijkstra(mat, numIndex) {
+            //mat是邻接矩阵，是一个二维数组，该方法不会修改mat矩阵内部的值
+            //我们还需要用一个一维数组dis来存储1号顶点到其余各个顶点的初始路程，我们将此时dis数组中的值称为最短路的“估计值”。
+            //!!! 一定要通过[].coancat()进行拷贝
             var dis = [].concat(mat[numIndex]);
             var n = dis.length;
-            var marked = [];
+            var marked = []; //用于存储已经处理过的顶点
             marked.push(numIndex);
-            for(var i = 0; i < n; i++) {
+
+            for (let i = 0; i < n; i++) {
                 //find not-marked min index and value
+                //通过一个内循环，找到还没有处理过的顶点中距离最小的顶点
                 var notMarkedMinIndex = -1;
                 var notMarekdMinValue = Infinity;
-                for (var j = 0; j < n; j++) {
+                for (let j = 0; j < n; j++) {
+                    //!!! 注意if (marked.indexOf(j) < 0)这个判断语句在内循环内部
+                    //!!! marked.indexOf(j)，而不是i
                     if (marked.indexOf(j) < 0) {
                         var value = dis[j];
                         if (value < notMarekdMinValue) {
@@ -24,24 +41,70 @@
                     }
                 }
 
-                if(notMarkedMinIndex < 0){
+                if (notMarkedMinIndex < 0) {
                     continue;
                 }
 
+                //对找到的顶点notMarkedMinIndex的出边进行松弛
                 var distFromNotMarkedMinIndex = mat[notMarkedMinIndex];
-                for (var k = 0; k < n; k++) {
+                for (let k = 0; k < n; k++) {
                     if (distFromNotMarkedMinIndex[k] < Infinity) {
+                        //!!!
                         if (dis[k] > (notMarekdMinValue + distFromNotMarkedMinIndex[k])) {
                             dis[k] = (notMarekdMinValue + distFromNotMarkedMinIndex[k]);
                         }
                     }
                 }
+
+                //!!! 最后一定要记得将notMarkedMinIndex加入到marked数组中
                 marked.push(notMarkedMinIndex);
+
                 console.log(dis);
             }
         }
 
-        var m = [
+        // function dijkstra2(mat, verticeIndex) {
+        //     let length = mat.length;
+        //     let dis = [].concat(mat[verticeIndex]);
+        //     let marked = [];
+        //     marked.push(verticeIndex);
+
+        //     for (let i = 0; i < length; i++) {
+        //         //查找notMarkedMinValue和notMarkedMinIndex
+        //         let notMarkedMinValue = Infinity;
+        //         let notMarkedMinIndex = -1;
+        //         for (let j = 0; j < length; j++) {
+        //             if (marked.indexOf(j) < 0) {
+        //                 if (dis[j] < notMarkedMinValue) {
+        //                     notMarkedMinValue = dis[j];
+        //                     notMarkedMinIndex = j;
+        //                 }
+        //             }
+        //         }
+
+        //         if (notMarkedMinIndex < 0) {
+        //             continue;
+        //         }
+
+        //         //对顶点notMarkedMinIndex的所有出边进行松弛
+        //         //disFromNotMarkedMinIndex表示从notMarkedMinIndex到其余各个顶点的距离
+        //         let disFromNotMarkedMinIndex = mat[notMarkedMinIndex];
+        //         for (let k = 0; k < length; k++) {
+        //             if (disFromNotMarkedMinIndex[k] < Infinity) {
+        //                 //0到2的距离 > 0到1的距离 + 1到2的距离，那么更新0到2的距离
+        //                 if (dis[k] > (dis[notMarkedMinIndex] + disFromNotMarkedMinIndex[k])) {
+        //                     dis[k] = dis[notMarkedMinIndex] + disFromNotMarkedMinIndex[k];
+        //                 }
+        //             }
+        //         }
+
+        //         marked.push(notMarkedMinIndex);
+
+        //         console.info(dis);
+        //     }
+        // }
+
+        var mat = [
             [0, 1, 12, Infinity, Infinity, Infinity],
             [Infinity, 0, 9, 3, Infinity, Infinity],
             [Infinity, Infinity, 0, Infinity, 5, Infinity],
@@ -50,7 +113,8 @@
             [Infinity, Infinity, Infinity, Infinity, 0]
         ];
 
-        dijkstra(m, 0);
+        dijkstra(mat, 0);
+        // dijkstra2(mat, 0);
     </script>
 </head>
 
