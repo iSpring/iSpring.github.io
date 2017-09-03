@@ -15,7 +15,13 @@
                 这便是Dijkstra算法的主要思想：通过“边”来松弛1号顶点到其余各个顶点的路程。
                 */
         //------------------------------------以邻接矩阵实现的Dijkstra最短路径算法----------------------------------------------
+
+        //!!! mat, numIndex
         function dijkstra(mat, numIndex) {
+            //!!! dis、marked、松弛、返回dis数组
+            ///!!! for大循环，里面有两个小for循环，每次遍历都遍历顶点个数的数量
+
+
             //mat是邻接矩阵，是一个二维数组，该方法不会修改mat矩阵内部的值
             //我们还需要用一个一维数组dis来存储1号顶点到其余各个顶点的初始路程，我们将此时dis数组中的值称为最短路的“估计值”。
             //!!! 一定要通过[].coancat()进行拷贝
@@ -23,6 +29,10 @@
             var n = dis.length;
             var marked = []; //用于存储已经处理过的顶点
             marked.push(numIndex);
+
+            //!!!!!! 一个外for循环i，里面套两个内for循环j和k，都是遍历verticeCount
+            //第一个小内for循环j用于查找notMarkedMinIndex
+            //第二个小内for循环k用于松弛
 
             for (let i = 0; i < n; i++) {
                 //find not-marked min index and value
@@ -49,14 +59,15 @@
                 var distFromNotMarkedMinIndex = mat[notMarkedMinIndex];
                 for (let k = 0; k < n; k++) {
                     if (distFromNotMarkedMinIndex[k] < Infinity) {
-                        //!!!
+                        //!!! 松弛
                         if (dis[k] > (notMarekdMinValue + distFromNotMarkedMinIndex[k])) {
                             dis[k] = (notMarekdMinValue + distFromNotMarkedMinIndex[k]);
                         }
                     }
                 }
 
-                //!!! 最后一定要记得将notMarkedMinIndex加入到marked数组中
+                //!!!!!! 最后一定要记得将notMarkedMinIndex加入到marked数组中
+                //!!!!!!
                 marked.push(notMarkedMinIndex);
 
                 console.log(dis);
@@ -110,7 +121,7 @@
             [Infinity, Infinity, 0, Infinity, 5, Infinity],
             [Infinity, Infinity, 4, 0, 13, 15],
             [Infinity, Infinity, Infinity, Infinity, 0, 4],
-            [Infinity, Infinity, Infinity, Infinity, 0]
+            [Infinity, Infinity, Infinity, Infinity, Infinity, 0]
         ];
 
         dijkstra(mat, 0);

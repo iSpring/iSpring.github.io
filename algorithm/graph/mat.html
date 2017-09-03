@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>基于邻接矩阵实现图的各种功能</title>
+    <script>
+        /*
+        floyd:实现多源最短路径，三个嵌套for循环k、i、j，if(mat[i][j] > (mat[i][k] + mat[k][j]))
+
+        dijkstra:实现单源最短路径，返回dis数组，dis、marked、松弛、一个外循环for i，内嵌两个内循环for j和k，都遍历verticeCount遍
+        第一个内循环for j用于查找minNotMarkedIndex
+        第二个内循环for k用于进行松弛if(dis[k] > (notMarkedMinValue + disFromNotMarkedMinIndex[k]))
+
+        topoSort:实现拓扑排序，返回sortList，关键字indegreee、zerodegree
+        while(zerodegree.lenghth > 0)
+        */
+        function Graph(verticeCount){
+            this.verticeCount = verticeCount;
+            this.mat = [];
+            this.indegree  = [];//用于拓扑排序
+            for(let i = 0; i < this.verticeCount; i++){
+                this.mat[i] = [];
+                for(let j = 0; j < this.verticeCount; j++){
+                    if(i === j){
+                        //!!! 自身到自身的距离是0
+                        this.mat[i][j] = 0;
+                    }else{
+                        //其余距离默认是无穷
+                        this.mat[i][j] = Infinity;
+                    }                    
+                }
+                this.indegree.push(0);
+            }
+        }
+
+        //添加边，从from节点指向to节点，该边的权重值为dis
+        Graph.prototype.addEdge = function(from, to, dis){
+            this.mat[from][to] = dis;
+            this.indegree[to]++;
+        };
+
+        //获取to的前驱节点
+        Graph.prototype.getPreNodes = function(to){
+            let preNodes = [];
+            for(let from = 0; i < this.verticeCount; from++){
+                //确保不要把自身也列为前驱节点
+                if(from !== to){
+                    let dis = this.mat[i][to];
+                    if(dis < Infinity){
+                        preNodes.push(from);
+                    }
+                }
+            }
+            return preNodes;
+        };
+
+        //获取from的后继节点
+        Graph.prototype.getNextNodes = function(from){
+            let nextNodes = [];
+            for(let to = 0; to < this.verticeCount; to++){
+                if(from !== to){
+                    let dis = this.mat[from][to];
+                    if(dis < Infinity){
+                        nextNodes.push(to);
+                    }
+                }
+            }
+            return nextNodes;
+        };
+
+        //拓扑排序
+        Graph.prototype.topoSort = function(){
+            //!!! sortList、indegree、zerodegree
+            let sortList = [];
+            let indegree = [].concat(this.indegree);
+            let zerodegree = [];//记录入度为0的索引
+            for(let i = 0; i < indegree.length; i++){
+                if(indegree[i] === 0){
+                    zerodegree.push(i);
+                }
+            }
+
+            //循环zerodegree
+            while(zerodegree.length > 0){
+                let from = zerodegree.shift();
+                sortList.push(from);
+                //from的后继节点
+                let tos = this.getNextNodes(from);
+
+                for(let j = 0; j < tos.length; j++){
+                    let to = tos[j];
+                    indegree[to]--;
+                    if(indegree[to] === 0){
+                        zerodegree.push(to);
+                    }
+                }
+            }
+
+            if(sortList.length < this.verticeCount){
+                console.log('topoSort: 图中存在环');
+            }else{
+                console.log('topoSort:', sortList);
+            }
+        };
+
+        //用floyd实现多源最短路径
+        Graph.prototype.floyd = function(){
+            let mat = [];
+            for(let i = 0; i < this.verticeCount; i++){
+                mat[i] = [].concat(this.mat[i]);
+            }
+
+            //!!! 三个for循环，k、i、j
+            for(let k = 0; k < this.verticeCount; k++){
+                for(let i = 0; i < this.verticeCount; i++){
+                    for(let j = 0; j < this.verticeCount; j++){
+                        //!!! mat[i][k] mat[k][j]
+                        if(mat[i][j] > (mat[i][k] + mat[k][j])){
+                            mat[i][j] = mat[i][k] + mat[k][j];
+                        }
+                    }
+                }
+            }
+            console.log('floyd:', mat);
+        };
+
+        //通过dijkstra实现单源最短路径，求verticeIndex到其他点的最短路径
+        Graph.prototype.dijkstra = function(verticeIndex){
+            //!!! dis、marked、松弛，dis是输出结果
+            let dis = [].concat(this.mat[verticeIndex]);
+            let marked = [];
+            marked.push(verticeIndex);
+
+            //!!! 一个外for循环i，里面套两个内for循环j和k，都是遍历verticeCount
+            //第一个小内for循环j用于查找notMarkedMinIndex
+            //第二个小内for循环k用于松弛
+            for(let i = 0; i < this.verticeCount; i++){
+
+                let notMarkedMinValue = Infinity;
+                let notMarkedMinIndex = -1;
+                for(let j = 0; j < this.verticeCount; j++){
+                    if(marked.indexOf(j) < 0){
+                        let value = dis[j];
+                        if(value < notMarkedMinValue){
+                            notMarkedMinValue = value;
+                            notMarkedMinIndex = j;
+                        }
+                    }
+                }
+
+                if(notMarkedMinIndex < 0){
+                    continue;
+                }
+
+                //!!!
+                let disFromNotMakredMinIndex = this.mat[notMarkedMinIndex];
+                for(let k = 0; k < this.verticeCount; k++){
+                    if(disFromNotMakredMinIndex[k] < Infinity){
+                        //!!! 松弛
+                        if(dis[k] > (notMarkedMinValue + disFromNotMakredMinIndex[k])){
+                            dis[k] = notMarkedMinValue + disFromNotMakredMinIndex[k];
+                        }
+                    }
+                }
+
+                //!!!!!! 最后一定要记得将notMarkedMinIndex加入到marked数组中
+                //!!!!!!
+                marked.push(notMarkedMinIndex);
+
+                console.log(dis);
+            }
+            console.log('dijkstra:', dis);
+        };
+
+        function test(){
+            //http://ahalei.blog.51cto.com/4767671/1387799
+            var graph1 = new Graph(6);
+            graph1.addEdge(0, 1, 1);
+            graph1.addEdge(0, 2, 12);
+            graph1.addEdge(1, 2, 9);
+            graph1.addEdge(1, 3, 3);
+            graph1.addEdge(2, 4, 5);
+            graph1.addEdge(3, 2, 4);
+            graph1.addEdge(3, 4, 13);
+            graph1.addEdge(3, 5, 15);
+            graph1.addEdge(4, 5, 4);
+            graph1.dijkstra(0);
+
+            //http://ahalei.blog.51cto.com/4767671/1383613
+            var graph2 = new Graph(4);
+            graph2.addEdge(0, 1, 2);
+            graph2.addEdge(1, 2, 3);
+            graph2.addEdge(0, 2, 6);
+            graph2.addEdge(2, 0, 7);
+            graph2.addEdge(0, 3, 4);
+            graph2.addEdge(3, 0, 5);
+            graph2.addEdge(2, 3, 1);
+            graph2.addEdge(3, 2, 12);
+            graph2.floyd();
+
+            //http://blog.csdn.net/lisonglisonglisong/article/details/45543451
+            var graph3 = new Graph(6);
+            //添加边的时候最后需要设置权重
+            graph3.addEdge(5, 2, 1);
+            graph3.addEdge(5, 0, 1);
+            graph3.addEdge(4, 0, 1);
+            graph3.addEdge(4, 1, 1);
+            graph3.addEdge(2, 3, 1);
+            graph3.addEdge(3, 1, 1);
+            graph3.topoSort();
+            //输出: [4, 5, 2, 0, 3, 1]
+        }
+
+        test();
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

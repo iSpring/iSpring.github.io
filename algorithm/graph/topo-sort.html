@@ -19,12 +19,18 @@
             从图中删除该顶点和所有以它为起点的有向边。
             重复 1 和 2 直到当前的 DAG 图为空或当前图中不存在无前驱的顶点为止。后一种情况说明有向图中必然存在环。
 
+        算法核心：
+        循环遍历入度为0的节点数组，每次拿出一个节点，删除该节点以及与其关联的有向边，更新其后继节点的入度（减一）
+        对后继节点的入度减一之后，立即检查该后继节点的入度是否为0，如果为0，把它加入到zeroIndegree中，
+        下次循环再次从this.zeroIndegree中取出队头元素
+
         http://blog.csdn.net/lisonglisonglisong/article/details/45543451
         http://blog.csdn.net/baidu_30541191/article/details/47622259
         http://blog.jobbole.com/108351/
         */
 
         //Graph是有向图，基于邻接表实现，节点靠索引代替
+        //!!! 关键点：verticeCount、this.adjList、this.indegree、this.addEdge、this.topoSort
         function Graph(verticeCount){
             this.adjList = [];//邻接表[[0节点的后继数组],[1节点的后继数组],...[n-1节点的后继数组]]
             this.indegree = [];//存储所有节点的入度，默认都为0
@@ -45,28 +51,34 @@
 
         Graph.prototype.topoSort = function(){
             //因为下面会修改indegree数组，所以要克隆this.indegree
+            //!!! 首先要克隆一份
             let indegree = [].concat(this.indegree);
             //存储入度为0的节点的索引
             let zeroIndegree = [];
+            //记录已经排序的顶点
+            let sortList = [];
 
             //排序过程中，不会更改邻接表adjList，但是会修改indegree和zeroIndegree
-
             for(let i = 0; i < this.indegree.length; i++){
                 if(indegree[i] === 0){
                     zeroIndegree.push(i);
                 }
-            }
-
-            let sortList = [];//记录已经排序的顶点
+            }            
 
             //循环遍历入度为0的节点数组，每次拿出一个节点，删除该节点以及与其关联的有向边，更新其后继节点的入度（减一）
             //对后继节点的入度减一之后，立即检查该后继节点的入度是否为0，如果为0，把它加入到zeroIndegree中，
             //下次循环再次从this.zeroIndegree中取出队头元素
+
+            //!!! 关键点，通过while循环判断zeroIndegree.length > 0
             while(zeroIndegree.length > 0){
                 //zeroIndegree是一个队列，从队头出栈一个元素
+                //!!!
                 let from = zeroIndegree.shift();
+                //!!!
                 sortList.push(from);
+                //!!!
                 let tos = this.adjList[from];
+
                 //遍历from中的后继节点列表
                 for(let j = 0; j < tos.length; j++){
                     let to = tos[j];
@@ -90,41 +102,40 @@
         //     this.adjList = [];
         //     this.indegree = [];
         //     for(let i = 0; i < verticeCount; i++){
-        //         this.adjList[i] = [];
-        //         this.indegree[i] = 0;
+        //         this.adjList.push([]);
+        //         this.indegree.push(0);
         //     }
         // }
-
+        
         // Graph2.prototype.addEdge = function(from, to){
         //     this.adjList[from].push(to);
         //     this.indegree[to]++;
         // };
-
+        
         // Graph2.prototype.topoSort = function(){
         //     let sortList = [];
-        //     let indegree = [].concat(this.indegree);
-        //     let zeroIndegree = [];
+        //     let indegree = [].concat(this.indegree);    
+        //     let zerodegree = [];
         //     for(let i = 0; i < indegree.length; i++){
         //         if(indegree[i] === 0){
-        //             zeroIndegree.push(i);
+        //             zerodegree.push(i);
         //         }
         //     }
-
-        //     while(zeroIndegree.length > 0){
-        //         let from = zeroIndegree.shift();
+        //     while(zerodegree.length > 0){
+        //         let from = zerodegree.shift();
         //         sortList.push(from);
         //         let tos = this.adjList[from];
         //         for(let j = 0; j < tos.length; j++){
         //             let to = tos[j];
         //             indegree[to]--;
         //             if(indegree[to] === 0){
-        //                 zeroIndegree.push(to);
+        //                 zerodegree.push(to);
         //             }
         //         }
         //     }
-
+        
         //     if(sortList.length < this.adjList.length){
-        //         console.log('有向图中存在回路');
+        //         console.log('有向图中存在环');
         //     }else{
         //         console.log(sortList);
         //     }
@@ -141,14 +152,14 @@
             graph.topoSort();
             //输出: [4, 5, 2, 0, 3, 1]
 
-            var graph2 = new Graph(6);
-            graph2.addEdge(5, 2);
-            graph2.addEdge(5, 0);
-            graph2.addEdge(4, 0);
-            graph2.addEdge(4, 1);
-            graph2.addEdge(2, 3);
-            graph2.addEdge(3, 1);
-            graph2.topoSort();
+            // var graph2 = new Graph(6);
+            // graph2.addEdge(5, 2);
+            // graph2.addEdge(5, 0);
+            // graph2.addEdge(4, 0);
+            // graph2.addEdge(4, 1);
+            // graph2.addEdge(2, 3);
+            // graph2.addEdge(3, 1);
+            // graph2.topoSort();
         }
 
         test();
