@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Viewport</title>
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        td {
+            border: 1px solid;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <tbody>
+            <tr>
+                <td>window.devicePixelRatio</td>
+                <td id="a"></td>
+            </tr>
+            <tr>
+                <td>document.documentElement.clientWidth</td>
+                <td id="b"></td>
+            </tr>
+            <tr>
+                <td>document.documentElement.clientHeight</td>
+                <td id="c"></td>
+            </tr>
+            <tr>
+                <td>window.innerWidth</td>
+                <td id="d"></td>
+            </tr>
+            <tr>
+                <td>window.innerHeight</td>
+                <td id="e"></td>
+            </tr>
+            <tr>
+                <td>window.screen.width</td>
+                <td id="f"></td>
+            </tr>
+            <tr>
+                <td>window.screen.height</td>
+                <td id="g"></td>
+            </tr>
+            <tr>
+                <td>window.screen.availWidth</td>
+                <td id="h"></td>
+            </tr>
+            <tr>
+                <td>window.screen.availHeight</td>
+                <td id="i"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+<script type="text/javascript">
+    function update() {
+        document.querySelector("#a").innerHTML = window.devicePixelRatio;
+        document.querySelector("#b").innerHTML = document.documentElement.clientWidth;
+        document.querySelector("#c").innerHTML = document.documentElement.clientHeight;
+        document.querySelector("#d").innerHTML = window.innerWidth;
+        document.querySelector("#e").innerHTML = window.innerHeight;
+        document.querySelector("#f").innerHTML = window.screen.width;
+        document.querySelector("#g").innerHTML = window.screen.height;
+        document.querySelector("#h").innerHTML = window.screen.availWidth;
+        document.querySelector("#i").innerHTML = window.screen.availHeight;
+    }
+    // window.ontouchend = function() {
+    //     setTimeout(update, 500);
+    // };
+    // update();
+    setInterval(function() {
+        update();
+    }, 500);
+</script>
+
+</html>
